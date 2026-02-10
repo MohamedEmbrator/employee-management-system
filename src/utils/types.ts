@@ -1,0 +1,1 @@
+export type LoginRule = "admin" | "employee" | "manager"
