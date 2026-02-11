@@ -376,15 +376,15 @@ h1 {
   margin-bottom: 15px;
 }
 
-.role-card[data-role="manager"] .role-icon {
+.role-card .role-icon.manager {
   color: #4361ee;
 }
 
-.role-card[data-role="employee"] .role-icon {
+.role-card .role-icon.employee {
   color: #f5576c;
 }
 
-.role-card[data-role="admin"] .role-icon {
+.role-card .role-icon.admin {
   color: #10b981;
 }
 

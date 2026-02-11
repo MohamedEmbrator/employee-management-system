@@ -8,14 +8,59 @@ datasource db {
 }
 
 model User {
-  id    String   @id @default(cuid())
-  name  String
-  role  UserRole
-  email String
+  id        String   @id @default(cuid())
+  name      String
+  role      UserRole
+  email     String @unique
+  password  String
+  tasks     Task[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum UserRole {
   MANAGER
   ADMIN
   EMPLOYEE
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  title       String
+  description String
+  assignedBy  String
+  userId      String
+  assignedTo  User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  startDate   String
+  endDate     String
+  priority    TaskPriority
+  price       Float
+  currency    Currency
+  attachments Json[]       @default([])
+  status      TaskStatus
+  archived    Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum Currency {
+  USD
+  EUR
+  EGP
+  AED
+  SAR
+  GBP
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  UNDER_REVIEW
 }

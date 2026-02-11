@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
+import ReduxProvider from "@/redux/redux-provider";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -21,8 +22,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* eslint-disable-next-line @next/next/no-css-tags */}
+        <link rel="stylesheet" href="/css/all.min.css" />
+      </head>
       <body className={`${poppins.variable} antialiased`}>
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <ReduxProvider>
+          <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        </ReduxProvider>
       </body>
     </html>
   );

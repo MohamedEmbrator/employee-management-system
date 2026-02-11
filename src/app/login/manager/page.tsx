@@ -1,10 +1,44 @@
 "use client";
 import BackToHomeButton from "@/components/back-to-home-button";
-import { User } from "lucide-react";
-import { useTranslations } from "next-intl";
+import Toast from "@/components/ui/toast";
+import useToast from "@/hooks/use-toast";
+import { loginUser } from "@/redux/API/authAPI";
+import { useAppDispatch } from "@/redux/hooks";
+import { DOMAIN } from "@/utils/constants";
+import { validateLogin } from "@/utils/validation";
+import axios from "axios";
+import { useLocale, useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 const ManagerLogin = () => {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
   const t = useTranslations();
+  const currentLanguage = useLocale() as "ar" | "en";
+  const { toast, showToast } = useToast();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const loadingMessage = currentLanguage === "en" ? "Logging in...." : "جاري تسجيل الدخول ...";
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { error } = validateLogin({ email, password });
+    if (error) return showToast(error.details[0].message, "error");
+    try {
+      setLoading(true);
+      const { data } = await axios.post(`${DOMAIN}/api/auth/login`, { email: email.trim(), password: password.trim() });
+      await dispatch(loginUser({ id: data.id, email: data.email, name: data.name, role: data.role }));
+      showToast(currentLanguage === "en" ? "Logged in successfully" : "تم تسجيل الدخول بنجاح", "success");
+      router.replace("/dashboard/manager");
+      setLoading(false);
+      router.refresh();
+    } catch (error) {
+      const errorMessage = axios.isAxiosError(error) && error.response?.data?.message ? error.response.data.message : "an errorr occoured";
+      setLoading(false);
+      return showToast(errorMessage, "error");
+    }
+  };
   return (
     <div id="managerLoginPage" className="container">
       <div className="login-container">
@@ -12,7 +46,7 @@ const ManagerLogin = () => {
           <div className="login-header">
             <BackToHomeButton />
             <div className="logo-icon" style={{ fontSize: "32px" }}>
-              <User />
+              <i className="fas fa-user-tie"></i>
             </div>
           </div>
 
@@ -21,7 +55,11 @@ const ManagerLogin = () => {
             <p className="subtitle">{t("usePresetCredentials")}</p>
           </div>
 
-          <form id="managerLoginForm" className="login-form">
+          <form
+            id="managerLoginForm"
+            className="login-form"
+            onSubmit={handleSubmit}
+          >
             <div className="form-group">
               <label htmlFor="managerEmail">
                 <i className="fas fa-envelope"></i>
@@ -30,8 +68,10 @@ const ManagerLogin = () => {
               <input
                 type="email"
                 id="managerEmail"
+                value={email}
                 className="form-control"
                 placeholder={t("enterManagerEmail")}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -44,19 +84,27 @@ const ManagerLogin = () => {
               <input
                 type="password"
                 id="managerPassword"
+                value={password}
                 className="form-control"
                 placeholder={t("enterPassword")}
+                onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
 
-            <button type="submit" className="login-btn" id="managerLoginBtn">
+            <button
+              type="submit"
+              className="login-btn"
+              id="managerLoginBtn"
+              disabled={loading}
+            >
               <i className="fas fa-sign-in-alt"></i>
-              <span>{t("loginAsManager")}</span>
+              <span>{loading ? loadingMessage : t("loginAsManager")}</span>
             </button>
           </form>
         </div>
       </div>
+      <Toast toast={toast} />
     </div>
   );
 };
