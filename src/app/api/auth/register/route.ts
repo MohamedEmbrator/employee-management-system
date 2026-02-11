@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { setCookie } from "@/utils/generateToken";
 import { validateRegister } from "@/utils/validation";
@@ -15,23 +14,14 @@ export async function POST(request: NextRequest) {
     }
     const user = await prisma.user.findUnique({ where: { email: body.email.trim() } });
     if (user) return NextResponse.json({ message: "تم إستخدام هذا البريد الإلكتروني في حساب آخر" }, { status: 400 });
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(body.password.trim(), salt);
     const newUser = await prisma.user.create({
       data: {
-        name: body.name,
-        email: body.email,
+        name: body.name.trim(),
+        email: body.email.trim(),
         role: body.role,
-        password: hashedPassword
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true
-      }
-    });
-    const cookie = setCookie({ id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role });
+        password: body.password.trim()
+      }});
+    const cookie = setCookie({ id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role, password: newUser.password });
     (await cookies()).set("jwtToken", JSON.stringify({ id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role }), {
       httpOnly: true,
       secure: process.env.NODE_ENV !== "development",

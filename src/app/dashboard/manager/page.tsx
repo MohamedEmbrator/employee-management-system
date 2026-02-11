@@ -1,9 +1,19 @@
+"use client";
+import CreateAccountModal from "@/components/create-account-modal";
 import LogoutButton from "@/components/logout-button";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { useState } from "react";
 
 const ManagerDashboard = () => {
   const t = useTranslations();
+  const [modalTitle, setModalTitle] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const handleOpenModal = (title: string) => {
+    setModalTitle(title);
+    setIsOpen(true);
+  }
+
   return (
     <div id="managerDashboard" className="container">
       <div className="dashboard-container">
@@ -23,16 +33,15 @@ const ManagerDashboard = () => {
           </div>
 
           <div className="dashboard-options">
-            {/* onClick="openCreateAccountModal('employee')" */}
-            <div className="dashboard-option">
+            <div className="dashboard-option" onClick={() => handleOpenModal("employee")}>
               <div className="option-icon">
                 <i className="fas fa-user-plus"></i>
               </div>
               <div className="option-title">{t("createEmployeeAccount")}</div>
               <div className="option-desc">{t("registerNewEmployee")}</div>
             </div>
-            {/* onClick="openCreateAccountModal('admin')" */}
-            <div className="dashboard-option">
+            
+            <div className="dashboard-option" onClick={() => handleOpenModal("admin")}>
               <div className="option-icon">
                 <i className="fas fa-user-shield"></i>
               </div>
@@ -63,6 +72,7 @@ const ManagerDashboard = () => {
           </div>
         </div>
       </div>
+      <CreateAccountModal isOpen={isOpen} setIsOpen={setIsOpen} title={modalTitle} />
     </div>
   );
 };

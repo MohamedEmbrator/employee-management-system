@@ -39,7 +39,7 @@ export interface Task {
   priority: TaskPriority;
   price: number;
   currency: Currency;
-  attachments: { public_id: string; url: string }[];
+  attachments: File[] | { url: string; publicId: string }[];
   status: TaskStatus;
   archived: boolean;
   createdAt: string;
@@ -51,4 +51,5 @@ export type JWTPayload = {
   name: string;
   email: string;
   role: UserRole;
+  password: string;
 };

@@ -3,6 +3,8 @@ import { useTranslations } from "next-intl";
 
 const ViewUsersModal = () => {
   const t = useTranslations();
+  // <p style="text-align: center; color: #64748b;">No users found.</p>
+  // className = "show"
   return (
       <div id="viewUsersModal" className="modal">
         <div className="modal-content">
