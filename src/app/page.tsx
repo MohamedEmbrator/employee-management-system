@@ -4,12 +4,14 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { LoginRule } from "@/utils/types";
 import { useRouter } from "next/navigation";
+import { useAppSelector } from "@/redux/hooks";
 
 const HomePage = () => {
   const router = useRouter();
+  const { loggedInUser } = useAppSelector((state) => state.auth);
   const t = useTranslations();
   const [selectedRole, setSelectedRole] = useState<LoginRule | "">("");
-  const handleNavigate = () => router.push(`/login/${selectedRole}`);
+  if (loggedInUser) return router.replace(`/dashboard/${loggedInUser.role.toLowerCase()}`);
   return (
     <div className="home">
       <LanguageSwitcher />
@@ -63,7 +65,7 @@ const HomePage = () => {
               className="continue-btn"
               id="continueBtn"
               disabled={!selectedRole}
-              onClick={handleNavigate}
+              onClick={() => router.push(`/login/${selectedRole}`)}
             >
               <i className="fas fa-arrow-right"></i>
               <span>{t("continue")}</span>

@@ -31,7 +31,7 @@ export default function RootLayout({
       <body className={`${poppins.variable} antialiased`}>
         <ReduxProvider>
           <NextIntlClientProvider>
-            <ToastContainer theme="colored" position="bottom-left" />
+            <ToastContainer theme="colored" position="bottom-right" />
             {children}
           </NextIntlClientProvider>
         </ReduxProvider>

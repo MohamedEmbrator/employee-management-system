@@ -1,4 +1,12 @@
-import { useTranslations } from "next-intl";
+"use client";
+import { DOMAIN } from "@/utils/constants";
+import { handleRequestError } from "@/utils/handle-errors";
+import { UserRole } from "@/utils/types";
+import { validateRegister } from "@/utils/validation";
+import axios from "axios";
+import { useLocale, useTranslations } from "next-intl";
+import { useState } from "react";
+import { toast } from "react-toastify";
 
 interface Props {
   title: string;
@@ -8,6 +16,38 @@ interface Props {
 
 const CreateAccountModal = ({ title, isOpen, setIsOpen }: Props) => {
   const t = useTranslations();
+  const currentLanguage = useLocale() as "en" | "ar";
+  const newUserRole: UserRole = title === "admin" ? "ADMIN" : "EMPLOYEE";
+  console.log(newUserRole);
+  const [createAccountForm, setCreateAccountForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+  console.log(createAccountForm);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const loadingMessage = currentLanguage === "en" ? "Creating Account..." : "جاري إنشاء الحساب ...";
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log(createAccountForm);
+    if (confirmPassword !== createAccountForm.password) return toast.error(t("passwordMismatch"));
+    const { error } = validateRegister({email: createAccountForm.email, name: createAccountForm.name, password: createAccountForm.password, role: newUserRole});
+    if (error) return toast.error(error.details[0].message);
+    const validData = { name: createAccountForm.name.trim(), email: createAccountForm.email.trim(), password: createAccountForm.password.trim(), role: newUserRole };
+    try {
+      setLoading(true);
+      const { data }= await axios.post(`${DOMAIN}/api/auth/register`, validData);
+      setLoading(false);
+      toast.success(data.message);
+      setCreateAccountForm({ email: "", name: "", password: "" });
+      setConfirmPassword("");
+    } catch (error) {
+      setLoading(false);
+      handleRequestError(error, "an error occoured during create account");
+    }
+  }
   return isOpen && (
     <div id="createAccountModal" className={`modal ${isOpen && "show"}`}>
       <div className="modal-content">
@@ -15,7 +55,7 @@ const CreateAccountModal = ({ title, isOpen, setIsOpen }: Props) => {
           <h2 id="modalTitle">{t("createNewAccount")} - {t(title)}</h2>
           <button className="close-modal" onClick={() => setIsOpen(false)}>&times;</button>
         </div>
-        <form id="createAccountForm">
+        <form id="createAccountForm" onSubmit={handleSubmit}>
           <div className="modal-body">
             <div className="form-group">
               <label htmlFor="createUserName">{t("fullName")}</label>
@@ -24,6 +64,8 @@ const CreateAccountModal = ({ title, isOpen, setIsOpen }: Props) => {
                 id="createUserName"
                 className="form-control"
                 placeholder={t("enterFullName")}
+                value={createAccountForm.name}
+                onChange={(e) => setCreateAccountForm((prev) => ({...prev, name: e.target.value}))}
                 required
               />
             </div>
@@ -35,6 +77,8 @@ const CreateAccountModal = ({ title, isOpen, setIsOpen }: Props) => {
                 id="createUserEmail"
                 className="form-control"
                 placeholder={t("enterEmailAddress")}
+                value={createAccountForm.email}
+                onChange={(e) => setCreateAccountForm((prev) => ({...prev, email: e.target.value}))}
                 required
               />
             </div>
@@ -47,6 +91,8 @@ const CreateAccountModal = ({ title, isOpen, setIsOpen }: Props) => {
                   id="createUserPassword"
                   className="form-control"
                   placeholder={t("enterPassword")}
+                  value={createAccountForm.password}
+                onChange={(e) => setCreateAccountForm((prev) => ({...prev, password: e.target.value}))}
                   required
                 />
               </div>
@@ -59,6 +105,8 @@ const CreateAccountModal = ({ title, isOpen, setIsOpen }: Props) => {
                   id="confirmUserPassword"
                   className="form-control"
                   placeholder={t("confirmYourPassword")}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                 />
               </div>
@@ -67,11 +115,11 @@ const CreateAccountModal = ({ title, isOpen, setIsOpen }: Props) => {
             <input type="hidden" id="createUserType" value="" />
           </div>
           <div className="modal-footer">
-            <button type="button" className="btn-secondary" onClick={() => setIsOpen(false)}>
+            <button type="button" className="btn-secondary" onClick={() => setIsOpen(false)} disabled={loading}>
               {t("cancel")}
             </button>
-            <button type="submit" className="btn-primary">
-              {t("createAccount")}
+            <button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? loadingMessage : t("createAccount")}
             </button>
           </div>
         </form>
