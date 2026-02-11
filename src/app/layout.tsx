@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import ReduxProvider from "@/redux/redux-provider";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import "./globals.css";
 
 const poppins = Poppins({
@@ -28,7 +30,10 @@ export default function RootLayout({
       </head>
       <body className={`${poppins.variable} antialiased`}>
         <ReduxProvider>
-          <NextIntlClientProvider>{children}</NextIntlClientProvider>
+          <NextIntlClientProvider>
+            <ToastContainer theme="colored" position="bottom-left" />
+            {children}
+          </NextIntlClientProvider>
         </ReduxProvider>
       </body>
     </html>
