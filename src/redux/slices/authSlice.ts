@@ -18,9 +18,8 @@ const authSlice = createSlice({
     login(state, action) {
       state.loggedInUser = action.payload;
     },
-    setUsernameAndEmail(state, action) {
-      state.loggedInUser!.name = action.payload.fullName;
-      state.loggedInUser!.email = action.payload.email;
+    setPassword(state, action) {
+      state.loggedInUser!.password = action.payload.password;
     },
     logout(state) {
       state.loggedInUser = null;

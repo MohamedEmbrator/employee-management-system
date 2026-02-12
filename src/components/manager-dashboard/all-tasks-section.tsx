@@ -1,75 +1,242 @@
+"use client";
+import { fetchTasks } from "@/redux/API/tasksAPI";
+import { getAllUsersData } from "@/redux/API/usersAPI";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { TabsNavigationTypes, Task } from "@/utils/types";
 import { useTranslations } from "next-intl";
+import { useEffect, useMemo, useState } from "react";
 
-const AllTasksSection = () => {
+interface Props {
+  currentTab: TabsNavigationTypes;
+  setShowNewTaskModal: React.Dispatch<React.SetStateAction<boolean>>;
+  setSelectedTask: React.Dispatch<React.SetStateAction<string>>;
+}
+
+const AllTasksSection = ({ currentTab, setShowNewTaskModal, setSelectedTask }: Props) => {
   const t = useTranslations("managerDashboardPage");
+  const { tasks } = useAppSelector((state) => state.tasks);
+  const { users } = useAppSelector((state) => state.users);
+  const dispatch = useAppDispatch();
+  const [taskStatusFilter, setTaskStatusFilter] = useState("all");
+  const [usersFilter, setUsersFilter] = useState("all");
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((task) => {
+      const matchesStatus =
+        taskStatusFilter === "all" || task.status === taskStatusFilter;
+      const matchesUser = usersFilter === "all" || task.userId === taskStatusFilter;
+      return matchesStatus && matchesUser;
+    });
+  }, [taskStatusFilter, tasks, usersFilter]);
+  useEffect(() => {
+    dispatch(fetchTasks());
+    dispatch(getAllUsersData());
+  }, [dispatch]);
   return (
-    <div id="all-tasks" className="section active">
-      <div className="section-header">
-        <h2>
-          <i className="fas fa-tasks"></i>{" "}
-          <span id="allTasksTitle">{t("allTasksTitle")}</span>
-        </h2>
-        <div
-          style={{
-            display: "flex",
-            gap: "10px",
-            flexWrap: "wrap",
-            alignItems: "center",
-          }}
-        >
-          <div className="filter-controls">
-            {/* onchange="filterAllTasks()" */}
-            <select id="taskFilter" className="filter-select">
-              <option value="all" id="filterAll">
-                {t("filterAll")}
-              </option>
-              <option value="pending" id="filterPending">
-                {t("filterPending")}
-              </option>
-              <option value="in-progress" id="filterInProgress">
-                {t("filterInProgress")}
-              </option>
-              <option value="completed" id="filterCompleted">
-                {t("filterCompleted")}
-              </option>
-              <option value="under-review" id="filterReview">
-                {t("filterReview")}
-              </option>
-            </select>
-            {/* onchange="filterAllTasks()" */}
-            <select id="userFilter" className="filter-select">
-              <option value="all" id="filterAllUsers">
-                {t("filterAllUsers")}
-              </option>
-            </select>
+    currentTab === "all-tasks" && (
+      <div
+        id="all-tasks"
+        className={`section ${currentTab === "all-tasks" && "active"}`}
+      >
+        <div className="section-header">
+          <h2>
+            <i className="fas fa-tasks"></i>{" "}
+            <span id="allTasksTitle">{t("allTasksTitle")}</span>
+          </h2>
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+              flexWrap: "wrap",
+              alignItems: "center",
+            }}
+          >
+            <div className="filter-controls">
+              <select
+                id="taskFilter"
+                className="filter-select"
+                value={taskStatusFilter}
+                onChange={(e) => setTaskStatusFilter(e.target.value)}
+              >
+                <option value="all" id="filterAll">
+                  {t("filterAll")}
+                </option>
+                <option value="PENDING" id="filterPending">
+                  {t("filterPending")}
+                </option>
+                <option value="IN_PROGRESS" id="filterInProgress">
+                  {t("filterInProgress")}
+                </option>
+                <option value="COMPLETED" id="filterCompleted">
+                  {t("filterCompleted")}
+                </option>
+                <option value="UNDER_REVIEW" id="filterReview">
+                  {t("filterReview")}
+                </option>
+              </select>
+              <select
+                id="userFilter"
+                className="filter-select"
+                value={usersFilter}
+                onChange={(e) => setUsersFilter(e.target.value)}
+              >
+                <option value="all" id="filterAllUsers">
+                  {t("filterAllUsers")}
+                </option>
+                {users &&
+                  users.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+            <button
+              className="new-task-btn"
+              onClick={() => {
+                setShowNewTaskModal(true);
+              }}
+            >
+              <i className="fas fa-plus"></i>
+              <span id="newTaskBtn">{t("newTaskBtn")}</span>
+            </button>
           </div>
-          {/* onclick="openNewTaskModal()" */}
-          <button className="new-task-btn">
-            <i className="fas fa-plus"></i>
-            <span id="newTaskBtn">{t("newTaskBtn")}</span>
-          </button>
+        </div>
+        <div className="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th id="taskNameHeader">{t("taskNameHeader")}</th>
+                <th id="assignedByHeader">{t("assignedByHeader")}</th>
+                <th id="assignedToHeader">{t("assignedToHeader")}</th>
+                <th id="startDateHeader">{t("startDateHeader")}</th>
+                <th id="endDateHeader">{t("endDateHeader")}</th>
+                <th id="priorityHeader">{t("priorityHeader")}</th>
+                <th id="statusHeader">{t("statusHeader")}</th>
+                <th id="actionsHeader">{t("actionsHeader")}</th>
+              </tr>
+            </thead>
+            <tbody id="allTasksTable">
+              {tasks.length < 1 &&
+                taskStatusFilter === "all" &&
+                usersFilter === "all" && (
+                  <tr>
+                    <td colSpan={8}>
+                      <div className="empty-state">
+                        <i className="fas fa-tasks"></i>
+                        <h3>{t("noTasksFound")}</h3>
+                        <p>{t("noTasksFoundDescription")}</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              {tasks.length > 0 && filteredTasks.length < 1 && (
+                <tr>
+                  <td colSpan={8}>
+                    <div className="empty-state">
+                      <i className="fas fa-tasks"></i>
+                      <h3>No Matching Tasks</h3>
+                      <p>No tasks match your current filters.</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+              {filteredTasks &&
+                filteredTasks.map((task) => (
+                  <tr key={task.id}>
+                    <td>
+                      <strong style={{ color: "#1e293b", fontSize: "15px" }}>
+                        {task.title}
+                      </strong>
+                      {/* ${workBadge}
+                      ${priceBadge} */}
+                      <div className="task-description">
+                        {task.description
+                          ? task.description.substring(0, 80) + "..."
+                          : "No description"}
+                      </div>
+                    </td>
+                    <td>
+                      <div
+                        className={`badge badge-${'manager'}`}
+                        style={{ padding: "6px 12px" }}
+                      >
+                        {task.assignedBy}
+                      </div>
+                    </td>
+                    <td>
+                      <div
+                        className="badge badge-${task.assignedToType || 'employee'}"
+                        style={{ padding: "6px 12px" }}
+                      >
+                        {task.assignedTo?.name}
+                      </div>
+                    </td>
+                    <td style={{ fontWeight: "500", color: "#475569" }}>
+                      {task.startDate || "Not set"}
+                    </td>
+                    <td style={{ fontWeight: "500", color: "#475569" }}>
+                      {task.endDate || "Not set"}
+                    </td>
+                    <td>
+                      <span
+                        className={`badge badge-${task.priority.toLowerCase()}`}
+                      >
+                        {t(
+                          `priority${(task.priority.toLowerCase() || "medium").charAt(0).toUpperCase() + (task.priority.toLowerCase() || "medium").slice(1)}`,
+                        )}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`badge badge-${task.status.toLowerCase() || 'pending'}`}>
+                        {t(
+                          `status${(task.status.toLowerCase() || "pending")
+                            .split("_")
+                            .map(
+                              (word) =>
+                                word.charAt(0).toUpperCase() + word.slice(1),
+                            )
+                            .join("")}`,
+                        )}
+                      </span>
+                      {task.status === "IN_PROGRESS" && (
+                        <div className="progress-container">
+                          <div className="progress-bar">
+                            <div
+                              className="progress-fill"
+                              style={{ width: `${task.progress || 0}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      <div className="action-buttons">
+                        <button className="action-btn view" onClick={() => setSelectedTask(task.id)}>
+                          <i className="fas fa-eye"></i> {t("actionView")}
+                        </button>
+                        {/* onclick="openReassignModal('${task.id}')" */}
+                        <button className="action-btn reassign">
+                          <i className="fas fa-exchange-alt"></i> $
+                          {t("actionReassign")}
+                        </button>
+                        {/* onclick="archiveTask('${task.id}')" */}
+                        <button className="action-btn archive">
+                          <i className="fas fa-archive"></i>{" "}
+                          {t("actionArchive")}
+                        </button>
+                        {/* onclick="deleteTask('${task.id}')" */}
+                        <button className="action-btn delete">
+                          <i className="fas fa-trash"></i> {t("actionDelete")}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
         </div>
       </div>
-      <div className="table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th id="taskNameHeader">{t("taskNameHeader")}</th>
-              <th id="assignedByHeader">{t("assignedByHeader")}</th>
-              <th id="assignedToHeader">{t("assignedToHeader")}</th>
-              <th id="startDateHeader">{t("startDateHeader")}</th>
-              <th id="endDateHeader">{t("endDateHeader")}</th>
-              <th id="priorityHeader">{t("priorityHeader")}</th>
-              <th id="statusHeader">{t("statusHeader")}</th>
-              <th id="actionsHeader">{t("actionsHeader")}</th>
-            </tr>
-          </thead>
-          <tbody id="allTasksTable">
-            {/* <!-- Tasks will be populated by JavaScript --> */}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    )
   );
 };
 

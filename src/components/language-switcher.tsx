@@ -28,7 +28,7 @@ const LanguageSwitcher = () => {
   };
 
   return (
-    <div className="language-switcher fixed top-5 right-5 flex gap-2.5 z-1000 bg-white/10 backdrop-blur-[10px] p-2 border border-white/20 rounded-[50px]">
+    <div className="language-switcher">
       <button
         className={`lang-btn ${currentLang === "en" && "active"}`}
         onClick={() => changeLanguage("en")}

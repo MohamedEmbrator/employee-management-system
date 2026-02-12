@@ -25,6 +25,7 @@ const tasksSlice = createSlice({
     },
     addTask(state, action) {
       state.tasks.push(action.payload);
+      state.tasksCount += 1;
     },
     setTasks(state, action) {
       state.tasks = action.payload;

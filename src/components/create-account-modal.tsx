@@ -1,4 +1,6 @@
 "use client";
+import { useAppDispatch } from "@/redux/hooks";
+import { usersActions } from "@/redux/slices/usersSlice";
 import { DOMAIN } from "@/utils/constants";
 import { handleRequestError } from "@/utils/handle-errors";
 import { UserRole } from "@/utils/types";
@@ -16,15 +18,14 @@ interface Props {
 
 const CreateAccountModal = ({ title, isOpen, setIsOpen }: Props) => {
   const t = useTranslations();
+  const dispatch = useAppDispatch();
   const currentLanguage = useLocale() as "en" | "ar";
   const newUserRole: UserRole = title === "admin" ? "ADMIN" : "EMPLOYEE";
-  console.log(newUserRole);
   const [createAccountForm, setCreateAccountForm] = useState({
     name: "",
     email: "",
     password: "",
   });
-  console.log(createAccountForm);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const loadingMessage = currentLanguage === "en" ? "Creating Account..." : "جاري إنشاء الحساب ...";
@@ -40,6 +41,7 @@ const CreateAccountModal = ({ title, isOpen, setIsOpen }: Props) => {
       setLoading(true);
       const { data }= await axios.post(`${DOMAIN}/api/auth/register`, validData);
       setLoading(false);
+      dispatch(usersActions.addUser(data));
       toast.success(data.message);
       setCreateAccountForm({ email: "", name: "", password: "" });
       setConfirmPassword("");

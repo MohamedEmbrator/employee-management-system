@@ -31,7 +31,7 @@ const ViewUsersModal = ({ viewAllUsers, setViewAllUsers }: Props) => {
         </div>
         <div className="modal-body">
           <div className="user-list" id="usersList">
-            {users.length < 0 && (
+            {users.length < 1 && (
               <p style={{ textAlign: "center", color: "#64748b" }}>
                 No users found.
               </p>

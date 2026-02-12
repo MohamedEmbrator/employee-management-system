@@ -1,5 +1,4 @@
 "use client";
-import "./manager.css";
 import LanguageSwitcher from "@/components/language-switcher";
 import LogoutButton from "./logout-button";
 import { useAppSelector } from "@/redux/hooks";
@@ -20,29 +19,36 @@ import SubmissionDetailsModal from "@/components/manager-dashboard/submission-de
 import TaskSubmissionDetailsModal from "@/components/manager-dashboard/task-submission-details-modal";
 import AddCommentsModal from "@/components/manager-dashboard/add-comments-modal";
 import EditUserModal from "@/components/manager-dashboard/edit-user-modal";
+import { useState } from "react";
+import { TabsNavigationTypes } from "@/utils/types";
+import "./manager.css";
 
 const ManagerDashboardPage = () => {
   const router = useRouter();
   const { loggedInUser } = useAppSelector((state) => state.auth);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [openNewManagerModal, setOpenNewManagerModal] = useState(false);
+  const [currentTab, setCurrentTab] = useState<TabsNavigationTypes>("all-tasks");
+  const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const [selectedTask, setSelectedTask] = useState("");
   if (!loggedInUser) return router.replace("/");
-  if (loggedInUser.role !== "MANAGER")
-    return router.replace(`/dashboard/${loggedInUser.role.toLowerCase()}`);
+  if (loggedInUser.role !== "MANAGER") return router.replace(`/dashboard/${loggedInUser.role.toLowerCase()}`);
   return (
     <>
       <LanguageSwitcher />
       <TaskNotification />
       <div className="container">
-        <ManagerDashboardHeader />
-        <TabsNavigation />
-        <AllTasksSection />
-        <SubmittedWork />
-        <UsersSection />
-        <ArchiveSection />
+        <ManagerDashboardHeader {...{setShowChangePasswordModal, setOpenNewManagerModal}} />
+        <TabsNavigation {...{currentTab, setCurrentTab}} />
+        <AllTasksSection {...{currentTab, setShowNewTaskModal, setSelectedTask}} />
+        <SubmittedWork {...{currentTab}}/>
+        <UsersSection {...{currentTab}}/>
+        <ArchiveSection {...{currentTab}}/>
       </div>
-      <TaskDetailsModal />
-      <NewTaskModal />
-      <ChangePasswordModal />
-      <NewManagerAccountModal />
+      <TaskDetailsModal  />
+      <NewTaskModal {...{showNewTaskModal, setShowNewTaskModal}} />
+      <ChangePasswordModal {...{showChangePasswordModal, setShowChangePasswordModal}} />
+      <NewManagerAccountModal {...{openNewManagerModal, setOpenNewManagerModal}} />
       <ReassignTaskModal />
       <SubmissionDetailsModal />
       {/* <!-- Task Submission Details Modal (معدل) --> */}

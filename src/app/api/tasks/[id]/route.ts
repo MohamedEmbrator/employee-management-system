@@ -57,11 +57,15 @@ export async function PUT(request: NextRequest, { params }: Props) {
 
     for (const file of newAttachments) {
       const buffer = Buffer.from(await file.arrayBuffer());
-
+      const originalName = file.name; 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result = await new Promise<any>((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
-          { folder: "employee-managemnet-system", resource_type: "raw" },
+          {
+            folder: "employee-managemenet-system", resource_type: "auto",
+            use_filename: true,
+            unique_filename: false,
+            public_id: `${Date.now()}-${originalName}`,},
           (error, result) => {
             if (result) resolve(result);
             else reject(error);

@@ -19,6 +19,13 @@ export function validateLogin(data: { email: string; password: string }) {
   return schema.validate(data);
 }
 
+export function validateChangePassword(data: { newPassword: string }) {
+  const schema = Joi.object({
+    newPassword: Joi.string().trim().min(6).max(255).required(),
+  });
+  return schema.validate(data);
+}
+
 export function validateAddTask(data: Partial<Task>) {
   const schema = Joi.object({
     title: Joi.string().trim().min(2).required(),

@@ -28,7 +28,7 @@ const ManagerLogin = () => {
     try {
       setLoading(true);
       const { data } = await axios.post(`${DOMAIN}/api/auth/login`, { email: email.trim(), password: password.trim() });
-      await dispatch(loginUser({ id: data.id, email: data.email, name: data.name, role: data.role }));
+      await dispatch(loginUser({ id: data.id, email: data.email, name: data.name, role: data.role, password: data.password }));
       showToast(currentLanguage === "en" ? "Logged in successfully" : "تم تسجيل الدخول بنجاح", "success");
       router.replace("/dashboard/manager");
       setLoading(false);

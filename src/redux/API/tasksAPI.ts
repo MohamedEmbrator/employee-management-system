@@ -20,7 +20,7 @@ export function getTasksCount() {
   return async (dispatch: Dispatch) => {
     try {
       const { data } = await axios.get(`${DOMAIN}/api/tasks/count`);
-      dispatch(tasksActions.setTasksCount(data));
+      dispatch(tasksActions.setTasksCount(data.count));
     } catch (error) {
       handleRequestError(error, "حدث خطأ أثناء الحصول على عدد المهام");
     }

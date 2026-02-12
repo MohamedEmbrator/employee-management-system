@@ -1,11 +1,25 @@
 "use client";
-import { useAppSelector } from "@/redux/hooks";
+import { fetchTasks, getTasksCount } from "@/redux/API/tasksAPI";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { useTranslations } from "next-intl";
 import { redirect } from "next/navigation";
+import { useEffect } from "react";
 
-const ManagerDashboardHeader = () => {
+interface Props {
+  setShowChangePasswordModal: React.Dispatch<React.SetStateAction<boolean>>;
+  setOpenNewManagerModal: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const ManagerDashboardHeader = ({ setShowChangePasswordModal, setOpenNewManagerModal }: Props) => {
   const t = useTranslations("managerDashboardPage");
+  const { tasks, tasksCount } = useAppSelector((state) => state.tasks);
   const { loggedInUser } = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
+  const completedTasks = tasks.filter((task) => task.status === "COMPLETED").length;
+  useEffect(() => {
+    dispatch(fetchTasks());
+    dispatch(getTasksCount());
+  }, [dispatch]);
   if (!loggedInUser) return redirect("/");
   return (
     <div className="header">
@@ -18,13 +32,14 @@ const ManagerDashboardHeader = () => {
         </div>
       </div>
       <div className="header-actions">
-        {/* onclick="openChangePasswordModal()" */}
-        <button className="header-btn change-password-btn">
+        <button
+          className="header-btn change-password-btn"
+          onClick={() => setShowChangePasswordModal(true)}
+        >
           <i className="fas fa-key"></i>
           <span id="">{t("changePasswordBtn")}</span>
         </button>
-        {/* onclick="openNewManagerModal()" */}
-        <button className="header-btn new-manager-btn">
+        <button className="header-btn new-manager-btn" onClick={() => setOpenNewManagerModal(true)}>
           <i className="fas fa-user-plus"></i>
           <span id="newManagerBtn">{t("newManagerBtn")}</span>
         </button>
@@ -33,11 +48,10 @@ const ManagerDashboardHeader = () => {
       <div className="stats-overview">
         <h3 id="totalTasksTitle">{t("totalTasksTitle")}</h3>
         <div className="stats-count" id="totalTasksCount">
-          0
+          {tasksCount}
         </div>
-        {/* <!-- التعديل هنا: بدل tasksInProgress أصبح tasksCompleted --> */}
         <div className="stats-label" id="tasksCompleted">
-          0 {t("tasksCompleted")}
+          {completedTasks} {t("tasksCompleted")}
         </div>
       </div>
     </div>

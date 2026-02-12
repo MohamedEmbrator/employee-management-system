@@ -1,9 +1,14 @@
+import { TabsNavigationTypes } from "@/utils/types";
 import { useTranslations } from "next-intl";
 
-const UsersSection = () => {
+interface Props {
+  currentTab: TabsNavigationTypes;
+}
+
+const UsersSection = ({ currentTab }: Props) => {
   const t = useTranslations("managerDashboardPage");
-  return (
-    <div id="users" className="section">
+  return currentTab === "users" && (
+    <div id="users" className={`section ${currentTab === "users" && "active"}`}>
       <div className="section-header">
         <h2>
           <i className="fas fa-users"></i>{" "}

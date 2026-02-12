@@ -4,7 +4,7 @@ import { createSlice } from "@reduxjs/toolkit";
 interface InitialStateTypes {
   user: null | User;
   isAccountDeleted: boolean;
-  users: User[] | [];
+  users: User[];
   usersCount: number;
 }
 
@@ -21,6 +21,9 @@ const usersSlice = createSlice({
   reducers: {
     setUserData(state, action) {
       state.user = action.payload;
+    },
+    addUser(state, action) {
+      state.users.push(action.payload)
     },
     setUsersCount(state, action) {
       state.usersCount = action.payload;

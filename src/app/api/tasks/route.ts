@@ -4,7 +4,7 @@ import streamifier from "streamifier";
 import { verifyToken } from "@/utils/verifyToken";
 import { NextRequest, NextResponse } from "next/server";
 import { validateAddTask } from "@/utils/validation";
-import { Currency, TaskPriority, TaskStatus } from "@/utils/types";
+import { Currency, TaskPriority } from "@/utils/types";
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,7 +28,6 @@ export async function POST(request: NextRequest) {
     const endDate = formData.get("endDate") as string;
     const priority = formData.get("priority") as TaskPriority;
     const currency = formData.get("currency") as Currency;
-    const status = formData.get("status") as TaskStatus;
     const userId = formData.get("userId") as string;
     const price = Number(formData.get("price"));
     const attachmentsData = formData.getAll("attachments");
@@ -43,11 +42,16 @@ export async function POST(request: NextRequest) {
       }
 
       const buffer = Buffer.from(await attachment.arrayBuffer());
-
+      const originalName = attachment.name; 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const uploadResult = await new Promise<any>((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
-          { folder: "employee-managemnet-system", resource_type: "raw" },
+          {
+            folder: "employee-managemenet-system", resource_type: "auto",
+            use_filename: true,
+            unique_filename: false,
+            public_id: `${Date.now()}-${originalName}`,
+          },
           (error, result) => {
             if (result) resolve(result);
             else reject(error);
@@ -65,14 +69,14 @@ export async function POST(request: NextRequest) {
     const newTask = await prisma.task.create({
       data: {
         title: title.trim(),
-        assignedBy: user.id,
+        assignedBy: user.name,
         currency: currency,
         description: description.trim(),
         startDate: startDate.trim(),
         endDate: endDate.trim(),
         price: price,
         priority: priority,
-        status: status,
+        status: "PENDING",
         archived: false,
         userId: userId,
         attachments: attachmentsUrls
