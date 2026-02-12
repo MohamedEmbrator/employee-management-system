@@ -8,15 +8,15 @@ datasource db {
 }
 
 model User {
-  id             String         @id @default(cuid())
+  id             String          @id @default(cuid())
   name           String
   role           UserRole
-  email          String         @unique
+  email          String          @unique
   password       String
   tasks          Task[]
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  loginHistories LoginHistory[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  submittedWorks SubmittedWork[]
 }
 
 enum UserRole {
@@ -26,27 +26,55 @@ enum UserRole {
 }
 
 model Task {
-  id           String       @id @default(cuid())
-  title        String
-  description  String
-  assignedBy   String
-  userId       String
-  assignedTo   User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  startDate    String
-  endDate      String
-  priority     TaskPriority
-  price        Float
-  currency     Currency
-  attachments  Json[]       @default([])
-  status       TaskStatus
-  archived     Boolean      @default(false)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  submitted    Boolean      @default(false)
-  submittedAt  DateTime?
-  archivedBy   String?
-  archivedDate DateTime?
-  progress      Float        @default(0)
+  id             String       @id @default(cuid())
+  title          String
+  description    String
+  assignedBy     String
+  userId         String
+  assignedTo     User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  startDate      String
+  endDate        String
+  priority       TaskPriority
+  price          Float
+  currency       Currency
+  attachments    Json[]       @default([])
+  status         TaskStatus
+  archived       Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  submitted      Boolean      @default(false)
+  submittedAt    DateTime?
+  archivedBy     String?
+  archivedDate   DateTime?
+  progress       Float        @default(0)
+  reassignReason String?
+  comment        String?
+}
+
+model SubmittedWork {
+  id             String       @id @default(cuid())
+  title          String
+  description    String
+  formEmployee   String
+  userId         String
+  toEmployee     User         @relation(fields: [userId], references: [id])
+  startDate      String
+  endDate        String
+  priority       TaskPriority
+  price          Float
+  currency       Currency
+  attachments    Json[]       @default([])
+  status         TaskStatus
+  archived       Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  submitted      Boolean      @default(false)
+  submittedAt    DateTime?
+  archivedBy     String?
+  archivedDate   DateTime?
+  progress       Float        @default(0)
+  reassignReason String?
+  comment        String?
 }
 
 enum TaskPriority {
@@ -69,11 +97,4 @@ enum TaskStatus {
   IN_PROGRESS
   COMPLETED
   UNDER_REVIEW
-}
-
-model LoginHistory {
-  id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  loginDate DateTime @default(now())
 }

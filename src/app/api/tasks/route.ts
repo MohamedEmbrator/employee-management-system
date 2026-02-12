@@ -83,6 +83,23 @@ export async function POST(request: NextRequest) {
       },
       include: {assignedTo: true}
     });
+    await prisma.submittedWork.create({
+      data: {
+        title: title.trim(),
+        formEmployee: user.name,
+        currency: currency,
+        description: description.trim(),
+        startDate: startDate.trim(),
+        endDate: endDate.trim(),
+        price: price,
+        priority: priority,
+        status: "PENDING",
+        archived: false,
+        userId: userId,
+        attachments: attachmentsUrls,
+      },
+      include: {toEmployee: true}
+    })
       return NextResponse.json(newTask, { status: 201 });
     } catch (error) {
       return NextResponse.json({ message: error }, { status: 500 });

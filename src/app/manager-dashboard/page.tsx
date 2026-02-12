@@ -15,8 +15,8 @@ import NewTaskModal from "@/components/manager-dashboard/new-task-modal";
 import ChangePasswordModal from "@/components/manager-dashboard/change-password-modal";
 import NewManagerAccountModal from "@/components/manager-dashboard/new-manager-account-modal";
 import ReassignTaskModal from "@/components/manager-dashboard/reassign-task-modal";
-import SubmissionDetailsModal from "@/components/manager-dashboard/submission-details-modal";
-import TaskSubmissionDetailsModal from "@/components/manager-dashboard/task-submission-details-modal";
+// import SubmissionDetailsModal from "@/components/manager-dashboard/submission-details-modal";
+// import TaskSubmissionDetailsModal from "@/components/manager-dashboard/task-submission-details-modal";
 import AddCommentsModal from "@/components/manager-dashboard/add-comments-modal";
 import EditUserModal from "@/components/manager-dashboard/edit-user-modal";
 import { useState } from "react";
@@ -31,6 +31,8 @@ const ManagerDashboardPage = () => {
   const [currentTab, setCurrentTab] = useState<TabsNavigationTypes>("all-tasks");
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState("");
+  const [showViewTask, setShowViewTask] = useState(false);
+  const [showReAssignTask, setShowReAssignTask] = useState(false);
   if (!loggedInUser) return router.replace("/");
   if (loggedInUser.role !== "MANAGER") return router.replace(`/dashboard/${loggedInUser.role.toLowerCase()}`);
   return (
@@ -40,19 +42,19 @@ const ManagerDashboardPage = () => {
       <div className="container">
         <ManagerDashboardHeader {...{setShowChangePasswordModal, setOpenNewManagerModal}} />
         <TabsNavigation {...{currentTab, setCurrentTab}} />
-        <AllTasksSection {...{currentTab, setShowNewTaskModal, setSelectedTask}} />
+        <AllTasksSection {...{currentTab, setShowNewTaskModal, setSelectedTask, setShowViewTask, setShowReAssignTask}} />
         <SubmittedWork {...{currentTab}}/>
         <UsersSection {...{currentTab}}/>
         <ArchiveSection {...{currentTab}}/>
       </div>
-      <TaskDetailsModal  />
+      <TaskDetailsModal  {...{selectedTask, showViewTask, setShowViewTask}} />
       <NewTaskModal {...{showNewTaskModal, setShowNewTaskModal}} />
       <ChangePasswordModal {...{showChangePasswordModal, setShowChangePasswordModal}} />
       <NewManagerAccountModal {...{openNewManagerModal, setOpenNewManagerModal}} />
-      <ReassignTaskModal />
-      <SubmissionDetailsModal />
+      <ReassignTaskModal {...{showReAssignTask, setShowReAssignTask}} />
+      {/* <SubmissionDetailsModal /> */}
       {/* <!-- Task Submission Details Modal (معدل) --> */}
-      <TaskSubmissionDetailsModal />
+      {/* <TaskSubmissionDetailsModal /> */}
       <AddCommentsModal />
       <EditUserModal />
       <LogoutButton />

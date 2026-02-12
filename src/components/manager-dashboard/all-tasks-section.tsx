@@ -1,26 +1,34 @@
 "use client";
-import { fetchTasks } from "@/redux/API/tasksAPI";
+import { deleteTask, fetchTasks } from "@/redux/API/tasksAPI";
 import { getAllUsersData } from "@/redux/API/usersAPI";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { TabsNavigationTypes, Task } from "@/utils/types";
-import { useTranslations } from "next-intl";
+import { tasksActions } from "@/redux/slices/tasksSlice";
+import { DOMAIN } from "@/utils/constants";
+import { handleRequestError } from "@/utils/handle-errors";
+import { TabsNavigationTypes } from "@/utils/types";
+import axios from "axios";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
 
 interface Props {
   currentTab: TabsNavigationTypes;
   setShowNewTaskModal: React.Dispatch<React.SetStateAction<boolean>>;
+  setShowViewTask: React.Dispatch<React.SetStateAction<boolean>>;
+  setShowReAssignTask: React.Dispatch<React.SetStateAction<boolean>>;
   setSelectedTask: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const AllTasksSection = ({ currentTab, setShowNewTaskModal, setSelectedTask }: Props) => {
+const AllTasksSection = ({ currentTab, setShowNewTaskModal, setSelectedTask, setShowViewTask, setShowReAssignTask }: Props) => {
   const t = useTranslations("managerDashboardPage");
+  const currentLanguage = useLocale() as "en" | "ar";
   const { tasks } = useAppSelector((state) => state.tasks);
   const { users } = useAppSelector((state) => state.users);
   const dispatch = useAppDispatch();
   const [taskStatusFilter, setTaskStatusFilter] = useState("all");
   const [usersFilter, setUsersFilter] = useState("all");
   const filteredTasks = useMemo(() => {
-    return tasks.filter((task) => {
+    return tasks.filter((task) => !task.archived).filter((task) => {
       const matchesStatus =
         taskStatusFilter === "all" || task.status === taskStatusFilter;
       const matchesUser = usersFilter === "all" || task.userId === taskStatusFilter;
@@ -31,6 +39,21 @@ const AllTasksSection = ({ currentTab, setShowNewTaskModal, setSelectedTask }: P
     dispatch(fetchTasks());
     dispatch(getAllUsersData());
   }, [dispatch]);
+  const handleDelete = async (taskId: string) => {
+    if (!confirm(t("deleteConfirm"))) return;
+    await dispatch(deleteTask(taskId));
+  }
+  const archiveTask = async (taskId: string) => {
+    if (!confirm(t("archiveConfirm"))) return;
+    try {
+      toast.info(currentLanguage === "en" ? "Archiving The Task" : "جاري أرشفة المهمة");
+      const { data } = await axios.put(`${DOMAIN}/api/tasks/archive/${taskId}`, { archived: true });
+      dispatch(tasksActions.updateTaskData(data));
+      toast.success(currentLanguage === "en" ? "Task Archived Succefully" : "تم أرشفة المهمة بنجاح");
+    } catch (error) {
+      handleRequestError(error, currentLanguage ==="en" ? "An error occured during archive task": "حدث خطأ أثناء أرشفة المهمة");
+    }
+  }
   return (
     currentTab === "all-tasks" && (
       <div
@@ -171,10 +194,10 @@ const AllTasksSection = ({ currentTab, setShowNewTaskModal, setSelectedTask }: P
                         {task.assignedTo?.name}
                       </div>
                     </td>
-                    <td style={{ fontWeight: "500", color: "#475569" }}>
+                    <td style={{ fontWeight: "500", color: "#475569", minWidth: "160px" }}>
                       {task.startDate || "Not set"}
                     </td>
-                    <td style={{ fontWeight: "500", color: "#475569" }}>
+                    <td style={{ fontWeight: "500", color: "#475569", minWidth: "160px" }}>
                       {task.endDate || "Not set"}
                     </td>
                     <td>
@@ -211,21 +234,24 @@ const AllTasksSection = ({ currentTab, setShowNewTaskModal, setSelectedTask }: P
                     </td>
                     <td>
                       <div className="action-buttons">
-                        <button className="action-btn view" onClick={() => setSelectedTask(task.id)}>
+                        <button className="action-btn view" onClick={() => {
+                          setSelectedTask(task.id);
+                          setShowViewTask(true);
+                        }}>
                           <i className="fas fa-eye"></i> {t("actionView")}
                         </button>
-                        {/* onclick="openReassignModal('${task.id}')" */}
-                        <button className="action-btn reassign">
-                          <i className="fas fa-exchange-alt"></i> $
+                        <button className="action-btn reassign" onClick={() => {
+                          setSelectedTask(task.id);
+                          setShowReAssignTask(true);
+                        }}>
+                          <i className="fas fa-exchange-alt"></i>
                           {t("actionReassign")}
                         </button>
-                        {/* onclick="archiveTask('${task.id}')" */}
-                        <button className="action-btn archive">
+                        <button className="action-btn archive" onClick={() => archiveTask(task.id)}>
                           <i className="fas fa-archive"></i>{" "}
                           {t("actionArchive")}
                         </button>
-                        {/* onclick="deleteTask('${task.id}')" */}
-                        <button className="action-btn delete">
+                        <button className="action-btn delete" onClick={() => handleDelete(task.id)}>
                           <i className="fas fa-trash"></i> {t("actionDelete")}
                         </button>
                       </div>

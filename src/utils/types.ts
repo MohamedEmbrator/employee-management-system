@@ -54,6 +54,7 @@ export interface Task {
   archivedBy: string;
   archivedDate: string;
   progress: number;
+  reassignReason?: string;
 }
 
 export type JWTPayload = {
