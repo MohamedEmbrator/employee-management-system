@@ -69,24 +69,7 @@ export async function POST(request: NextRequest) {
     const newTask = await prisma.task.create({
       data: {
         title: title.trim(),
-        assignedBy: user.name,
-        currency: currency,
-        description: description.trim(),
-        startDate: startDate.trim(),
-        endDate: endDate.trim(),
-        price: price,
-        priority: priority,
-        status: "PENDING",
-        archived: false,
-        userId: userId,
-        attachments: attachmentsUrls
-      },
-      include: {assignedTo: true}
-    });
-    await prisma.submittedWork.create({
-      data: {
-        title: title.trim(),
-        formEmployee: user.name,
+        assignedBy: user.role,
         currency: currency,
         description: description.trim(),
         startDate: startDate.trim(),
@@ -97,9 +80,10 @@ export async function POST(request: NextRequest) {
         archived: false,
         userId: userId,
         attachments: attachmentsUrls,
+        progress: 0,
       },
-      include: {toEmployee: true}
-    })
+      include: {assignedTo: true}
+    });
       return NextResponse.json(newTask, { status: 201 });
     } catch (error) {
       return NextResponse.json({ message: error }, { status: 500 });

@@ -1,5 +1,6 @@
 import { getAllUsersData } from "@/redux/API/usersAPI";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { submittedWorksActions } from "@/redux/slices/submittedWorkSlice";
 import { tasksActions } from "@/redux/slices/tasksSlice";
 import { DOMAIN } from "@/utils/constants";
 import { formatFileSize, getFileIcon } from "@/utils/formatters";
@@ -92,7 +93,9 @@ const NewTaskModal = ({ showNewTaskModal, setShowNewTaskModal }: Props) => {
     try {
       setLoading(true);
       const { data } = await axios.post(`${DOMAIN}/api/tasks`, formData);
+      const submittedWorkResponse = await axios.post(`${DOMAIN}/api/submitted-work`, { ...data, fromEmployee: data.assignedBy });
       dispatch(tasksActions.addTask(data));
+      dispatch(submittedWorksActions.addSubmittedWork(submittedWorkResponse.data));
       setNewTask({
         title: "",
         description: "",

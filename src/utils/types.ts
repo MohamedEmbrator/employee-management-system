@@ -2,11 +2,8 @@ export type LoginRule = "admin" | "employee" | "manager";
 export type TaskPriority = "LOW" | "MEDIUM" | "HIGH";
 export type Currency = "USD" | "EUR" | "EGP" | "AED" | "SAR" | "GBP";
 export type UserRole = "MANAGER" | "ADMIN" | "EMPLOYEE";
-export type TaskStatus =
-  | "PENDING"
-  | "IN_PROGRESS"
-  | "COMPLETED"
-  | "UNDER_REVIEW";
+export type TaskStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "UNDER_REVIEW";
+export type TabsNavigationTypes = "all-tasks" | "submitted-work" | "users" | "archive";
 
 export interface RegisterUser {
   name: string;
@@ -60,6 +57,12 @@ export interface Task {
   archivedDate: string;
   progress: number;
   reassignReason?: string;
+  comment: string;
+}
+
+export interface SubmittedWork extends Omit<Task, "assignedBy" | "assignedTo"> {
+  fromEmployee: string;
+  toEmployee: User;
 }
 
 export type JWTPayload = {
@@ -71,18 +74,6 @@ export type JWTPayload = {
 };
 
 export type ChangePasswordTypes = { oldPassword: string; newPassword: string };
-export type TabsNavigationTypes =
-  | "all-tasks"
-  | "submitted-work"
-  | "users"
-  | "archive";
-
-export interface LoginHistory {
-  id: string;
-  user: User;
-  userId: string;
-  loginDate: string;
-}
 
 export interface UploadedFile {
   file: File;

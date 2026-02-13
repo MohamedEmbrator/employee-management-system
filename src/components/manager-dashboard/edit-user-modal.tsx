@@ -19,12 +19,7 @@ interface Props {
   setEditUserDataForm: React.Dispatch<React.SetStateAction<Partial<User>>>;
 }
 
-const EditUserModal = ({
-  showEditUserData,
-  setShowEditUserData,
-  editUserDataForm,
-  setEditUserDataForm,
-}: Props) => {
+const EditUserModal = ({ showEditUserData, setShowEditUserData, editUserDataForm, setEditUserDataForm }: Props) => {
   const t = useTranslations("managerDashboardPage");
   const currentLanguage = useLocale() as "en" | "ar";
   const [newPassword, setNewPassword] = useState("");

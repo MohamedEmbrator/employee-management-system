@@ -47,7 +47,7 @@ const ManagerDashboardPage = () => {
         <AllTasksSection {...{currentTab, setShowNewTaskModal, setSelectedTask, setShowViewTask, setShowReAssignTask}} />
         <SubmittedWork {...{currentTab}}/>
         <UsersSection {...{currentTab, setShowEditUserData, setEditUserDataForm}}/>
-        <ArchiveSection {...{currentTab}}/>
+        <ArchiveSection {...{currentTab, setShowViewTask, setSelectedTask}}/>
       </div>
       <TaskDetailsModal  {...{selectedTask, showViewTask, setShowViewTask}} />
       <NewTaskModal {...{showNewTaskModal, setShowNewTaskModal}} />

@@ -55,7 +55,7 @@ model SubmittedWork {
   id             String       @id @default(cuid())
   title          String
   description    String
-  formEmployee   String
+  fromEmployee   String
   userId         String
   toEmployee     User         @relation(fields: [userId], references: [id])
   startDate      String

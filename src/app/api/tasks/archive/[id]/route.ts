@@ -17,7 +17,7 @@ export async function PUT(request: NextRequest, { params }: Props) {
       data: {
         archived: body.archived,
         archivedDate: new Date(),
-        archivedBy: user.name
+        archivedBy: user.role
       },
       include: { assignedTo: true },
     });
