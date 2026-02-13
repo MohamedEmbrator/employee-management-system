@@ -14,7 +14,7 @@ import { usersActions } from "@/redux/slices/usersSlice";
 
 interface Props {
   showEditUserData: boolean;
-  editUserDataForm: User;
+  editUserDataForm: Partial<User>;
   setShowEditUserData: React.Dispatch<React.SetStateAction<boolean>>;
   setEditUserDataForm: React.Dispatch<React.SetStateAction<Partial<User>>>;
 }
@@ -36,9 +36,9 @@ const EditUserModal = ({
     if (editUserDataForm) {
       if (confirmPassword !== newPassword) return toast.error(t("confirmNewPasswordError"))
       const { name, role } = editUserDataForm;
-      let newData: EditUserData = { name, role };
+      let newData: EditUserData = { name: name!, role: role! };
       if (newPassword.trim()) {
-        newData = { name, role, password: newPassword };
+        newData = { name: name!, role: role!, password: newPassword };
       }
       const { error } = validateEditUserData(newData);
       if (error) return toast.error(error.details[0].message);
@@ -99,7 +99,7 @@ const EditUserModal = ({
                   id="editUserType"
                   className="form-control"
                   required
-                  value={editUserDataForm.role}
+                  value={editUserDataForm?.role}
                   onChange={(e) =>
                     setEditUserDataForm((prev) => ({
                       ...prev,
