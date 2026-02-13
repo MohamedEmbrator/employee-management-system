@@ -1,16 +1,21 @@
 "use client";
-import { getAllUsersData } from "@/redux/API/usersAPI";
+import { deleteUserData, getAllUsersData } from "@/redux/API/usersAPI";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { TabsNavigationTypes } from "@/utils/types";
-import { useTranslations } from "next-intl";
+import { TabsNavigationTypes, User } from "@/utils/types";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
 
 interface Props {
   currentTab: TabsNavigationTypes;
+  setShowEditUserData: React.Dispatch<React.SetStateAction<boolean>>;
+  setEditUserDataForm: React.Dispatch<React.SetStateAction<Partial<User>>>;
 }
 
-const UsersSection = ({ currentTab }: Props) => {
+const UsersSection = ({ currentTab, setShowEditUserData, setEditUserDataForm }: Props) => {
   const t = useTranslations("managerDashboardPage");
+  const currentLanguage = useLocale() as "en" | "ar";
+  const { loggedInUser } = useAppSelector((state) => state.auth);
   const { users } = useAppSelector((state) => state.users);
   const dispatch = useAppDispatch();
   const [roleFilter, setRoleFilter] = useState("all");
@@ -22,6 +27,16 @@ const UsersSection = ({ currentTab }: Props) => {
   useEffect(() => {
     dispatch(getAllUsersData());
   }, [dispatch]);
+  const handleDelete = (user: User) => {
+    if (user.id === loggedInUser?.id) return toast.error(t("cannotDeleteSystemManager"));
+    if (!confirm(t("deleteUserConfirm"))) return;
+    dispatch(deleteUserData(user.id));
+    toast.success(currentLanguage === "en" ? `User "${user.name}" Deleted Succefully` : `تم حذف المستخدم "${user.name}" بنجاح`);
+  }
+  const handleEdit = (user: User) => {
+    setShowEditUserData(true);
+    setEditUserDataForm(user);
+  }
   return (
     currentTab === "users" && (
       <div
@@ -34,8 +49,12 @@ const UsersSection = ({ currentTab }: Props) => {
             <span id="usersTitle">{t("usersTitle")}</span>
           </h2>
           <div className="filter-controls">
-            {/* onchange="filterUsers()" */}
-            <select id="userTypeFilter" className="filter-select">
+            <select
+              id="userTypeFilter"
+              className="filter-select"
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+            >
               <option value="all" id="filterAllTypes">
                 {t("filterAllTypes")}
               </option>
@@ -98,29 +117,23 @@ const UsersSection = ({ currentTab }: Props) => {
                         className="action-buttons"
                         style={{ flexDirection: "row", minWidth: "auto" }}
                       >
-                        {/* onclick="editUser('${user.id}')" */}
                         <button
                           className="action-btn edit"
                           title="${t.actionEdit}"
+                          onClick={() => handleEdit(user)}
                         >
                           <i className="fas fa-edit"></i>
                         </button>
-                        {/* onclick="deleteUser('${user.id}')" */}
-                        <button
-                          className="action-btn delete"
-                          title="${t.actionDelete}"
-                          disabled={user.email === "manager@email.com"}
-                          style={{
-                            opacity:
-                              user.email === "manager@email.com" ? 0.5 : 1,
-                            cursor:
-                              user.email === "manager@email.com"
-                                ? "not-allowed"
-                                : "auto",
-                          }}
-                        >
-                          <i className="fas fa-trash"></i>
-                        </button>
+                        {loggedInUser?.email !== user.email && (
+                          <button
+                            className="action-btn delete"
+                            title="${t.actionDelete}"
+                            disabled={user.email === "manager@email.com"}
+                            onClick={() => handleDelete(user)}
+                          >
+                            <i className="fas fa-trash"></i>
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

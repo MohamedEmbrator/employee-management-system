@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { RegisterUser, Task } from "./types";
+import { EditUserData, RegisterUser, Task } from "./types";
 
 export function validateRegister(data: RegisterUser) {
   const schema = Joi.object({
@@ -7,6 +7,15 @@ export function validateRegister(data: RegisterUser) {
     email: Joi.string().trim().min(3).email().required(),
     password: Joi.string().trim().min(6).max(255).required(),
     role: Joi.string().trim().required(),
+  });
+  return schema.validate(data);
+}
+
+export function validateEditUserData(data: EditUserData) {
+  const schema = Joi.object({
+    name: Joi.string().trim().min(2).max(255),
+    password: Joi.string().trim().min(6).max(255),
+    role: Joi.string().trim(),
   });
   return schema.validate(data);
 }

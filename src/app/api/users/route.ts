@@ -8,7 +8,6 @@ export async function GET(request: NextRequest) {
     if (!user) NextResponse.json({message: "لا يُسمح إلا لمدير الموقع بعرض بيانات جميع المستخدمين"}, {status: 403});
     if (user?.role !== "MANAGER") NextResponse.json({message: "لا يُسمح إلا لمدير الموقع بعرض بيانات جميع المستخدمين"}, {status: 403});
     const users = await prisma.user.findMany({
-      where: {role: {not: "MANAGER"}},
       orderBy: { createdAt: "desc" },
       include: { tasks: true },
     });

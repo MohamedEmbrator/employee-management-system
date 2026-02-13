@@ -15,6 +15,12 @@ export interface RegisterUser {
   role: UserRole;
 }
 
+export interface EditUserData {
+  name: string;
+  password?: string;
+  role: UserRole;
+}
+
 export interface LoginUser {
   email: string;
   password: string;
@@ -29,7 +35,6 @@ export interface User {
   tasks: Task[];
   createdAt: string;
   updatedAt: string;
-  loginHistories?: LoginHistory[];
 }
 
 export interface Task {

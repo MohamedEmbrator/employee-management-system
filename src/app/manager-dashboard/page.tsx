@@ -20,7 +20,7 @@ import ReassignTaskModal from "@/components/manager-dashboard/reassign-task-moda
 import AddCommentsModal from "@/components/manager-dashboard/add-comments-modal";
 import EditUserModal from "@/components/manager-dashboard/edit-user-modal";
 import { useState } from "react";
-import { TabsNavigationTypes } from "@/utils/types";
+import { TabsNavigationTypes, User } from "@/utils/types";
 import "./manager.css";
 
 const ManagerDashboardPage = () => {
@@ -33,6 +33,8 @@ const ManagerDashboardPage = () => {
   const [selectedTask, setSelectedTask] = useState("");
   const [showViewTask, setShowViewTask] = useState(false);
   const [showReAssignTask, setShowReAssignTask] = useState(false);
+  const [showEditUserData, setShowEditUserData] = useState(false);
+  const [editUserDataForm, setEditUserDataForm] = useState<Partial<User>>({});
   if (!loggedInUser) return router.replace("/");
   if (loggedInUser.role !== "MANAGER") return router.replace(`/dashboard/${loggedInUser.role.toLowerCase()}`);
   return (
@@ -44,7 +46,7 @@ const ManagerDashboardPage = () => {
         <TabsNavigation {...{currentTab, setCurrentTab}} />
         <AllTasksSection {...{currentTab, setShowNewTaskModal, setSelectedTask, setShowViewTask, setShowReAssignTask}} />
         <SubmittedWork {...{currentTab}}/>
-        <UsersSection {...{currentTab}}/>
+        <UsersSection {...{currentTab, setShowEditUserData, setEditUserDataForm}}/>
         <ArchiveSection {...{currentTab}}/>
       </div>
       <TaskDetailsModal  {...{selectedTask, showViewTask, setShowViewTask}} />
@@ -56,7 +58,7 @@ const ManagerDashboardPage = () => {
       {/* <!-- Task Submission Details Modal (معدل) --> */}
       {/* <TaskSubmissionDetailsModal /> */}
       <AddCommentsModal />
-      <EditUserModal />
+      <EditUserModal {...{showEditUserData, setShowEditUserData, editUserDataForm, setEditUserDataForm}} />
       <LogoutButton />
     </>
   );

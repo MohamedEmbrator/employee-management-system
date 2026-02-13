@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { User } from "@/utils/types";
+import { EditUserData } from "@/utils/types";
+import { validateEditUserData } from "@/utils/validation";
 import { verifyToken } from "@/utils/verifyToken";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -23,19 +24,20 @@ export async function PUT(request: NextRequest, { params }: Props) {
     const userLogged = verifyToken(request);
     if (!userLogged) return NextResponse.json({ message: "غير مصرح بتعديل بيانات المستخدمين" }, { status: 403 },);
     const id = (await params).id;
-    if (userLogged.role === "MANAGER" && userLogged.id !== id) {
+    if (userLogged.role !== "MANAGER" && userLogged.id !== id) {
       return NextResponse.json({ message: "غير مصرح بتعديل بيانات المستخدمين" }, { status: 403 });
     }
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user) return NextResponse.json({ message: "المُستخدم الذي تحاول تعديل بياناته غير موجود" }, { status: 404 });
-    const body = (await request.json()) as User;
+    const body = (await request.json()) as EditUserData;
+    const { error } = validateEditUserData(body);
+    if (error) return NextResponse.json({ message: error.details[0].message }, { status: 400 });
     const updatedUser = await prisma.user.update({
       where: { id },
       data: {
-        name: body.name.trim(),
+        name: body.name?.trim(),
         role: body.role,
-        email: body.email.trim(),
-        password: body.password || user.password,
+        password: body.password?.trim() || user.password,
       },
       include: { tasks: true },
     });
