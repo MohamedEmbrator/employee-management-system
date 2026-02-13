@@ -8,10 +8,13 @@ import { Currency, TaskPriority } from "@/utils/types";
 
 export async function GET(request: NextRequest) {
   try {
-    const tasks = await prisma.task.findMany({ orderBy: { createdAt: "desc" }, include: { assignedTo: true } });
+    const user = verifyToken(request);
+    let tasks = await prisma.task.findMany({ orderBy: { createdAt: "desc" }, include: { assignedTo: true } });
+    if (user?.role === "EMPLOYEE") {
+      tasks = await prisma.task.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, include: { assignedTo: true } });
+    }
     return NextResponse.json(tasks, { status: 200 });
   } catch (error) {
-    console.log(request);
     return NextResponse.json({ message: error }, { status: 500 });
   }
 }

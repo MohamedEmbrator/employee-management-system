@@ -1,8 +1,38 @@
+"use client";
 import LanguageSwitcher from "@/components/language-switcher";
 import LogoutButton from "../manager-dashboard/logout-button";
+import { useEffect, useMemo, useState } from "react";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { fetchTasks, getTasksCount } from "@/redux/API/tasksAPI";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { formatPriceWithCurrency } from "@/utils/formatters";
 import "./employee.css";
 
 const EmployeePage = () => {
+  const { loggedInUser } = useAppSelector((state) => state.auth);
+  const { tasks, tasksCount } = useAppSelector((state) => state.tasks);
+  const dispatch = useAppDispatch();
+  const t = useTranslations("employeePage");
+  const completedTasks = tasks.filter(
+    (task) => task.status === "COMPLETED",
+  ).length;
+  const router = useRouter();
+  const [taskStatusFilter, setTaskStatusFilter] = useState("all");
+  const filteredTasks = useMemo(() => {
+    return tasks
+      .filter((task) => !task.archived)
+      .filter((task) => {
+        return taskStatusFilter === "all" || task.status === taskStatusFilter;
+      });
+  }, [taskStatusFilter, tasks]);
+  useEffect(() => {
+    dispatch(fetchTasks());
+    dispatch(getTasksCount());
+  }, [dispatch]);
+  if (!loggedInUser) return router.replace("/");
+  if (loggedInUser.role !== "EMPLOYEE")
+    return router.replace(`/${loggedInUser?.role?.toLowerCase()}`);
   return (
     <>
       {/* <!-- File Preview Modal --> */}
@@ -20,20 +50,20 @@ const EmployeePage = () => {
         <div className="header">
           <div className="employee-info">
             <div className="employee-avatar" id="employeeAvatar">
-              ج
+              {loggedInUser?.name[0]}
             </div>
             <div className="employee-details">
-              <h1 id="employeeName">جاري التحميل...</h1>
-              <p id="employeeEmail">جاري التحميل...</p>
+              <h1 id="employeeName">{loggedInUser?.name}</h1>
+              <p id="employeeEmail">{loggedInUser?.email}</p>
             </div>
           </div>
           <div className="tasks-overview">
-            <h3 id="totalTasksTitle">إجمالي المهام</h3>
+            <h3 id="totalTasksTitle">{t("totalTasksTitle")}</h3>
             <div className="tasks-count" id="totalTasksCount">
-              0
+              {tasksCount}
             </div>
-            <div className="tasks-label" id="tasksInProgress">
-              0 مكتملة
+            <div className="tasks-label" id="tasksInProgress" dir="auto">
+              {completedTasks} {t("tasksCompleted")}
             </div>
           </div>
         </div>
@@ -43,7 +73,7 @@ const EmployeePage = () => {
           <div className="section-header">
             <h2>
               <i className="fas fa-tasks"></i>{" "}
-              <span id="tasksTitle">مهامي</span>
+              <span id="tasksTitle">{t("tasksTitle")}</span>
             </h2>
             <div>
               {/* onchange="filterTasks()" */}
@@ -55,21 +85,23 @@ const EmployeePage = () => {
                   border: "2px solid #e1e5ee",
                   fontFamily: "Poppins",
                 }}
+                value={taskStatusFilter}
+                onChange={(e) => setTaskStatusFilter(e.target.value)}
               >
                 <option value="all" id="filterAll">
-                  جميع المهام
+                  {t("filterAll")}
                 </option>
-                <option value="pending" id="filterPending">
-                  قيد الانتظار
+                <option value="PENDING" id="filterPending">
+                  {t("filterPending")}
                 </option>
-                <option value="in-progress" id="filterInProgress">
-                  قيد التنفيذ
+                <option value="IN_PROGRESS" id="filterInProgress">
+                  {t("filterInProgress")}
                 </option>
-                <option value="completed" id="filterCompleted">
-                  مكتمل
+                <option value="COMPLETED" id="filterCompleted">
+                  {t("filterCompleted")}
                 </option>
-                <option value="under-review" id="filterReview">
-                  قيد المراجعة
+                <option value="UNDER_REVIEW" id="filterReview">
+                  {t("filterReview")}
                 </option>
               </select>
             </div>
@@ -78,16 +110,107 @@ const EmployeePage = () => {
             <table>
               <thead>
                 <tr>
-                  <th id="taskNameHeader">اسم المهمة</th>
-                  <th id="startDateHeader">تاريخ البدء</th>
-                  <th id="endDateHeader">تاريخ الانتهاء</th>
-                  <th id="priorityHeader">الأولوية</th>
-                  <th id="statusHeader">الحالة</th>
-                  <th id="actionsHeader">الإجراءات</th>
+                  <th id="taskNameHeader">{t("taskNameHeader")}</th>
+                  <th id="startDateHeader">{t("startDateHeader")}</th>
+                  <th id="endDateHeader">{t("endDateHeader")}</th>
+                  <th id="priorityHeader">{t("priorityHeader")}</th>
+                  <th id="statusHeader">{t("statusHeader")}</th>
+                  <th id="actionsHeader">{t("actionsHeader")}</th>
                 </tr>
               </thead>
               <tbody id="tasksTable">
-                {/* <!-- Tasks will be populated by JavaScript --> */}
+                {filteredTasks.length < 1 && (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      style={{
+                        textAlign: "center",
+                        padding: "40px",
+                        color: "#666",
+                      }}
+                    >
+                      <i
+                        className="fas fa-tasks"
+                        style={{
+                          fontSize: "48px",
+                          marginBottom: "20px",
+                          color: "#e1e5ee",
+                        }}
+                      ></i>
+                      <h3 style={{ marginBottom: "10px" }}>
+                        {t("noTasksAssigned")}
+                      </h3>
+                      <p>سيقوم مديرك بتعيين مهام لك قريباً.</p>
+                    </td>
+                  </tr>
+                )}
+                {filteredTasks &&
+                  filteredTasks.map((task) => (
+                    <tr key={task.id}>
+                      <td>
+                        <strong>{task.title}</strong>
+                        <br />
+                        <small style={{ color: "#666" }}>
+                          {t("detailManager")} {task.assignedBy}
+                        </small>
+                        <div className="task-description">
+                          {task.description
+                            ? task.description.substring(0, 100) + "..."
+                            : "لا يوجد وصف"}
+                        </div>
+                        {task.price && (
+                          <div className="price-badge">
+                            {formatPriceWithCurrency(task.price, task.currency)}
+                          </div>
+                        )}
+                      </td>
+                      <td>{task.startDate}</td>
+                      <td>${task.endDate}</td>
+                      <td>
+                        <span
+                          className={`badge badge-${task.priority?.toLowerCase()}`}
+                        >
+                          {t(
+                            `priority${task.priority?.toLowerCase().charAt(0).toUpperCase() + task.priority?.toLowerCase().slice(1)}`,
+                          )}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          className={`badge badge-${task.status?.toLowerCase()}`}
+                        >
+                          {t(
+                            `status${(task.status.toLowerCase() || "pending")
+                              .split("-")
+                              .map(
+                                (word) =>
+                                  word.charAt(0).toUpperCase() + word.slice(1),
+                              )
+                              .join("")}`,
+                          )}
+                        </span>
+                        {task.status === "IN_PROGRESS" && (
+                          <div className="progress-container">
+                            <div className="progress-bar">
+                              <div
+                                className="progress-fill"
+                                style={{ width: `${task.progress}%` }}
+                              ></div>
+                            </div>
+                            <span style={{ fontSize: "12px", color: "#666" }}>
+                              {task.progress || 0}%
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                      <td>
+                        {/* onclick="viewTask('${task.id}')" */}
+                        <button className="action-btn view">
+                          <i className="fas fa-eye"></i> {t("actionView")}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
