@@ -1,6 +1,6 @@
 import cloudinary from "@/lib/cloudinary";
 import { prisma } from "@/lib/prisma";
-import { Currency, TaskPriority, TaskStatus } from "@/utils/types";
+import { Currency, TaskPriority } from "@/utils/types";
 import { validateEditTask } from "@/utils/validation";
 import { verifyToken } from "@/utils/verifyToken";
 import { NextRequest, NextResponse } from "next/server";
@@ -35,8 +35,9 @@ export async function PUT(request: NextRequest, { params }: Props) {
     const endDate = formData.get("endDate") as string;
     const priority = formData.get("priority") as TaskPriority;
     const currency = formData.get("currency") as Currency;
-    const status = formData.get("status") as TaskStatus;
     const userId = formData.get("userId") as string;
+    const reassignReason = formData.get("reassignReason") as string;
+    const comment = formData.get("comment") as string;
     const price = Number(formData.get("price"));
     // const attachmentsData = formData.getAll("attachments");
     const { error } = validateEditTask({title, description, startDate, endDate, priority, price, currency});
@@ -95,10 +96,11 @@ export async function PUT(request: NextRequest, { params }: Props) {
         endDate: endDate.trim(),
         price: price,
         priority: priority,
-        status: status,
         archived: false,
         userId: userId,
-        attachments: finalAttachments
+        attachments: finalAttachments,
+        reassignReason: reassignReason,
+        comment: comment,
       },
       include: { assignedTo: true },
     });

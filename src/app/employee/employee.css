@@ -428,6 +428,9 @@ td {
   padding: 15px;
   border-radius: 10px;
   text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .detail-item strong {

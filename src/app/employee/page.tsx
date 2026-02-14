@@ -3,10 +3,15 @@ import LanguageSwitcher from "@/components/language-switcher";
 import LogoutButton from "../manager-dashboard/logout-button";
 import { useEffect, useMemo, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { fetchTasks, getTasksCount } from "@/redux/API/tasksAPI";
+import {
+  fetchTasks,
+  getTasksCount,
+  updateTaskStatus,
+} from "@/redux/API/tasksAPI";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { formatPriceWithCurrency } from "@/utils/formatters";
+import { Task } from "@/utils/types";
 import "./employee.css";
 
 const EmployeePage = () => {
@@ -26,10 +31,18 @@ const EmployeePage = () => {
         return taskStatusFilter === "all" || task.status === taskStatusFilter;
       });
   }, [taskStatusFilter, tasks]);
+  const [viewTaskDetails, setViewTaskDetails] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   useEffect(() => {
     dispatch(fetchTasks());
     dispatch(getTasksCount());
   }, [dispatch]);
+
+  const handleViewTask = (task: Task) => {
+    setSelectedTask(task);
+    setViewTaskDetails(true);
+  };
+
   if (!loggedInUser) return router.replace("/");
   if (loggedInUser.role !== "EMPLOYEE")
     return router.replace(`/${loggedInUser?.role?.toLowerCase()}`);
@@ -151,7 +164,7 @@ const EmployeePage = () => {
                         <strong>{task.title}</strong>
                         <br />
                         <small style={{ color: "#666" }}>
-                          {t("detailManager")} {task.assignedBy}
+                          {t("detailManager")} {task?.assignedBy}
                         </small>
                         <div className="task-description">
                           {task.description
@@ -165,7 +178,7 @@ const EmployeePage = () => {
                         )}
                       </td>
                       <td>{task.startDate}</td>
-                      <td>${task.endDate}</td>
+                      <td>{task.endDate}</td>
                       <td>
                         <span
                           className={`badge badge-${task.priority?.toLowerCase()}`}
@@ -204,8 +217,10 @@ const EmployeePage = () => {
                         )}
                       </td>
                       <td>
-                        {/* onclick="viewTask('${task.id}')" */}
-                        <button className="action-btn view">
+                        <button
+                          className="action-btn view"
+                          onClick={() => handleViewTask(task)}
+                        >
                           <i className="fas fa-eye"></i> {t("actionView")}
                         </button>
                       </td>
@@ -218,119 +233,210 @@ const EmployeePage = () => {
       </div>
       <LanguageSwitcher />
       {/* <!-- Task Details Modal --> */}
-      <div id="taskModal" className="modal">
-        <div className="modal-content">
-          <div className="modal-header">
-            <h2 id="modalTaskTitle">تفاصيل المهمة</h2>
-            {/* onclick="closeTaskModal()" */}
-            <button className="close-modal">&times;</button>
-          </div>
-          <div className="task-details">
-            <div className="details-grid">
-              <div className="detail-item">
-                <strong id="detailManager">تم التعيين بواسطة:</strong>
-                <span id="modalTaskManager">اسم المدير</span>
+      {viewTaskDetails && selectedTask && (
+        <div id="taskModal" className={`modal ${viewTaskDetails && "show"}`}>
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2 id="modalTaskTitle">{selectedTask?.title}</h2>
+              <button
+                className="close-modal"
+                onClick={() => setViewTaskDetails(false)}
+              >
+                &times;
+              </button>
+            </div>
+            <div className="task-details">
+              <div className="details-grid">
+                <div className="detail-item">
+                  <strong id="detailManager" dir="auto">
+                    {t("detailManager")}
+                  </strong>
+                  <span id="modalTaskManager">
+                    {selectedTask?.assignedBy[0]?.toUpperCase()}
+                    {selectedTask?.assignedBy?.toLowerCase().slice(1)}
+                  </span>
+                </div>
+                <div className="detail-item">
+                  <strong id="detailStartDate" dir="auto">
+                    {t("detailStartDate")}
+                  </strong>
+                  <span id="modalTaskStartDate">{selectedTask?.startDate}</span>
+                </div>
+                <div className="detail-item">
+                  <strong id="detailEndDate" dir="auto">
+                    {t("detailEndDate")}
+                  </strong>
+                  <span id="modalTaskEndDate">{selectedTask?.endDate}</span>
+                </div>
+                <div className="detail-item">
+                  <strong id="detailPriority" dir="auto">
+                    {t("detailPriority")}
+                  </strong>
+                  <span id="modalTaskPriority">
+                    {selectedTask?.priority[0].toUpperCase()}
+                    {selectedTask?.priority?.toLowerCase().slice(1)}
+                  </span>
+                </div>
+                <div className="detail-item">
+                  <strong id="detailStatus" dir="auto">
+                    {t("detailStatus")}
+                  </strong>
+                  <span id="modalTaskStatus">
+                    {selectedTask.status[0]}
+                    {selectedTask.status
+                      .replace("_", " ")
+                      .toLowerCase()
+                      .slice(1)}
+                  </span>
+                </div>
+                <div className="detail-item">
+                  <strong id="detailProgress" dir="auto">
+                    {t("detailProgress")}
+                  </strong>
+                  <span id="modalTaskProgress">{selectedTask?.progress}%</span>
+                </div>
+                {/* <!-- ✅ إضافة خانة السعر هنا --> */}
+                <div className="detail-item">
+                  <strong id="detailPrice" dir="auto">
+                    {t("detailPrice")}
+                  </strong>
+                  <span id="modalTaskPrice">
+                    {formatPriceWithCurrency(
+                      +selectedTask!.price,
+                      selectedTask!.currency,
+                    )}
+                  </span>
+                </div>
               </div>
-              <div className="detail-item">
-                <strong id="detailStartDate">تاريخ البدء:</strong>
-                <span id="modalTaskStartDate">--</span>
+
+              <h3 id="descriptionTitle" dir="auto">
+                {t("descriptionTitle")}
+              </h3>
+              <p id="modalTaskDescription"></p>
+
+              <h3 id="attachmentsTitle" dir="auto">
+                {t("attachmentsTitle")}
+              </h3>
+              <div className="attachments-grid" id="modalAttachments">
+                {/* <!-- Attachments will be populated by JavaScript --> */}
               </div>
-              <div className="detail-item">
-                <strong id="detailEndDate">تاريخ الانتهاء:</strong>
-                <span id="modalTaskEndDate">--</span>
+
+              {/* <!-- Manager Comments --> */}
+              <div id="managerCommentsSection" className="manager-comments">
+                {selectedTask.comment ? (
+                  <>
+                    <h4>
+                      <i className="fas fa-comment"></i> {t("managerComments")}
+                    </h4>
+                    <p>{selectedTask.comment}</p>
+                    {/* <div className="comment-date">
+                      {t("commentedOn")}:
+                      {new Date(latestComment.date).toLocaleString()}
+                    </div> */}
+                  </>
+                ) : (
+                  <>
+                    <h4>
+                      <i className="fas fa-comment"></i> {t("managerComments")}
+                    </h4>
+                    <p>{t("noComments")}</p>
+                  </>
+                )}
               </div>
-              <div className="detail-item">
-                <strong id="detailPriority">الأولوية:</strong>
-                <span id="modalTaskPriority">--</span>
+
+              {/* <!-- Status Update Section --> */}
+              <div className="work-submission">
+                <h3 id="updateStatusTitle" dir="auto">
+                  {t("updateStatusTitle")}
+                </h3>
+                <div className="status-update-buttons" id="statusUpdateButtons">
+                  <button
+                    className="status-btn pending"
+                    onClick={() => dispatch(updateTaskStatus(selectedTask.id, "PENDING", t("statusUpdatePending")))}
+                  >
+                    <i className="fas fa-clock"></i> {t("statusPending")}
+                  </button>
+                  <button
+                    className="status-btn in-progress"
+                    onClick={() => dispatch(updateTaskStatus(selectedTask.id, "IN_PROGRESS", t("statusUpdateInProgress")))}
+                  >
+                    <i className="fas fa-spinner"></i> {t("statusInProgress")}
+                  </button>
+                  <button
+                    className="status-btn completed"
+                    onClick={() => dispatch(updateTaskStatus(selectedTask.id, "COMPLETED", t("statusUpdateCompleted")))}
+                  >
+                    <i className="fas fa-check"></i> {t("statusCompleted")}
+                  </button>
+                  <button
+                    className="status-btn under-review"
+                    onClick={() => dispatch(updateTaskStatus(selectedTask.id, "UNDER_REVIEW", t("statusUpdateUnderReview")))}
+                  >
+                    <i className="fas fa-search"></i> {t("statusUnderReview")}
+                  </button>
+                </div>
               </div>
-              <div className="detail-item">
-                <strong id="detailStatus">الحالة:</strong>
-                <span id="modalTaskStatus">--</span>
-              </div>
-              <div className="detail-item">
-                <strong id="detailProgress">التقدم:</strong>
-                <span id="modalTaskProgress">0%</span>
-              </div>
-              {/* <!-- ✅ إضافة خانة السعر هنا --> */}
-              <div className="detail-item">
-                <strong id="detailPrice">السعر / الميزانية:</strong>
-                <span id="modalTaskPrice">غير محدد</span>
+
+              <div className="work-submission">
+                <h3 id="submissionTitle">{t("submissionTitle")}</h3>
+                {/* onclick="document.getElementById('fileUpload').click()" */}
+                <div className="file-upload">
+                  <i className="fas fa-cloud-upload-alt"></i>
+                  <p id="uploadText">{t("uploadText")}</p>
+                  <p
+                    style={{ fontSize: "12px", color: "#666" }}
+                    id="uploadTypes"
+                  >
+                    {t("uploadTypes")}
+                  </p>
+                  {/* onchange="handleFileUpload(this.files)" */}
+                  <input
+                    type="file"
+                    id="fileUpload"
+                    multiple
+                    style={{ display: "none" }}
+                  />
+                </div>
+
+                <div className="uploaded-files" id="uploadedFiles">
+                  {/* <!-- Uploaded files will appear here --> */}
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "10px",
+                      fontWeight: "500",
+                    }}
+                    id="commentsLabel"
+                  >
+                    {t("commentsLabel")}
+                  </label>
+                  <textarea
+                    id="workComments"
+                    placeholder="أضف أي ملاحظات حول عملك..."
+                  ></textarea>
+                </div>
               </div>
             </div>
-
-            <h3 id="descriptionTitle">الوصف</h3>
-            <p id="modalTaskDescription"></p>
-
-            <h3 id="attachmentsTitle">المرفقات من المدير</h3>
-            <div className="attachments-grid" id="modalAttachments">
-              {/* <!-- Attachments will be populated by JavaScript --> */}
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn-secondary"
+                id="cancelBtn"
+                onClick={() => setViewTaskDetails(false)}
+              >
+                {t("cancelBtn")}
+              </button>
+              {/* onclick="sendWorkToManager()" */}
+              <button type="button" className="btn-primary" id="sendBtn">
+                {t("sendBtn")}
+              </button>
             </div>
-
-            {/* <!-- Manager Comments --> */}
-            <div id="managerCommentsSection" className="manager-comments">
-              {/* <!-- Manager comments will be populated here --> */}
-            </div>
-
-            {/* <!-- Status Update Section --> */}
-            <div className="work-submission">
-              <h3 id="updateStatusTitle">تحديث حالة المهمة</h3>
-              <div className="status-update-buttons" id="statusUpdateButtons">
-                {/* <!-- Status buttons will be populated by JavaScript --> */}
-              </div>
-            </div>
-
-            <div className="work-submission">
-              <h3 id="submissionTitle">تسليم عملك</h3>
-              {/* onclick="document.getElementById('fileUpload').click()" */}
-              <div className="file-upload">
-                <i className="fas fa-cloud-upload-alt"></i>
-                <p id="uploadText">انقر لرفع الملفات أو اسحب وأفلت</p>
-                <p style={{ fontSize: "12px", color: "#666" }} id="uploadTypes">
-                  PDF, DOC, DOCX, JPG, PNG, ZIP (الحد الأقصى 10MB لكل ملف)
-                </p>
-                {/* onchange="handleFileUpload(this.files)" */}
-                <input
-                  type="file"
-                  id="fileUpload"
-                  multiple
-                  style={{ display: "none" }}
-                />
-              </div>
-
-              <div className="uploaded-files" id="uploadedFiles">
-                {/* <!-- Uploaded files will appear here --> */}
-              </div>
-
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "10px",
-                    fontWeight: "500",
-                  }}
-                  id="commentsLabel"
-                >
-                  ملاحظات إضافية:
-                </label>
-                <textarea
-                  id="workComments"
-                  placeholder="أضف أي ملاحظات حول عملك..."
-                ></textarea>
-              </div>
-            </div>
-          </div>
-          <div className="modal-footer">
-            {/* onclick="closeTaskModal()" */}
-            <button type="button" className="btn-secondary" id="cancelBtn">
-              إلغاء
-            </button>
-            {/* onclick="sendWorkToManager()" */}
-            <button type="button" className="btn-primary" id="sendBtn">
-              إرسال للمدير
-            </button>
           </div>
         </div>
-      </div>
+      )}
       <LogoutButton />
     </>
   );

@@ -4,6 +4,7 @@ import { Dispatch } from "@reduxjs/toolkit";
 import axios from "axios";
 import { tasksActions } from "../slices/tasksSlice";
 import { toast } from "react-toastify";
+import { TaskStatus } from "@/utils/types";
 
 export function fetchTasks() {
   return async (dispatch: Dispatch) => {
@@ -49,4 +50,16 @@ export function deleteTask(taskId: string) {
       handleRequestError(error, "حدث خطأ أثناء حذف بيانات المهمة");
     }
   };
+}
+
+export function updateTaskStatus(taskId: string, newStatus: TaskStatus, message: string) {
+  return async (dispatch: Dispatch) => {
+    try {
+      const { data } = await axios.put(`${DOMAIN}/api/tasks/status/${taskId}`, { status: newStatus });
+      dispatch(tasksActions.updateTaskData(data));
+      toast.success(message);
+    } catch (error) {
+      handleRequestError(error, "حدث خطأ أثناء تحديث حالة المهمة");
+    }
+  }
 }
