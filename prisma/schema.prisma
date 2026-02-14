@@ -49,7 +49,7 @@ model Task {
   progress        Float         @default(0)
   reassignReason  String?
   comment         String?
-  submittedWork   SubmittedWork @relation(fields: [submittedWorkId], references: [id])
+  submittedWork   SubmittedWork @relation(fields: [submittedWorkId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   submittedWorkId String
 }
 
