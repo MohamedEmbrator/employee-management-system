@@ -186,7 +186,7 @@ const NewTaskModal = ({ showNewTaskModal, setShowNewTaskModal }: Props) => {
                     {users &&
                       users.map((user) => (
                         <option key={user.id} value={user.id}>
-                          {user.name}
+                          {user.name} ({user.email}) - {user.role.toLowerCase()}
                         </option>
                       ))}
                   </select>

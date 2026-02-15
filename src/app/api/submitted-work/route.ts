@@ -6,7 +6,7 @@ import { Prisma } from "../../../../generated/prisma/client";
 
 export async function GET(request: NextRequest) {
   try {
-    const tasks = await prisma.task.findMany({ orderBy: { createdAt: "desc" }, include: { assignedTo: true } });
+    const tasks = await prisma.submittedWork.findMany({ orderBy: { createdAt: "desc" }, include: { toEmployee: true, task: true } });
     return NextResponse.json(tasks, { status: 200 });
   } catch (error) {
     console.log(request);
@@ -37,8 +37,10 @@ export async function POST(request: NextRequest) {
         attachments: body.attachments as Prisma.InputJsonValue[],
         reassignReason: body.reassignReason,
         progress: body.progress,
+        taskId: body.id,
+        assignedBy: body.assignedBy,
       },
-      include: { toEmployee: true },
+      include: { toEmployee: true, task: true },
     });
     return NextResponse.json(newSubmittedWork, { status: 201 });
   } catch (error) {

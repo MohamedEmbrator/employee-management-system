@@ -20,7 +20,16 @@ export async function PUT(request: NextRequest, { params }: Props) {
         progress: taskProgress,
       }, include: { assignedTo: true }
     });
-    return NextResponse.json(updatedTask, { status: 200 });
+    const submittedWork = await prisma.submittedWork.findFirst({ where: { taskId: id }, orderBy: {createdAt: "desc"} });
+    const updatedSubmission =  await prisma.submittedWork.update({
+      where: { id: submittedWork?.id },
+      data: {
+        status: body.status,
+        progress: taskProgress,
+      },
+      include: {task: true, toEmployee: true},
+    });
+    return NextResponse.json({updatedTask: updatedTask, updatedSubmission: updatedSubmission}, { status: 200 });
   } catch (error) {
     return NextResponse.json({ message: error }, { status: 500 });
   }

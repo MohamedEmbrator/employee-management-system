@@ -1,34 +1,35 @@
 import { prisma } from "@/lib/prisma";
-import { Task } from "@/utils/types";
+import { ReassignReason } from "@/utils/types";
 import { verifyToken } from "@/utils/verifyToken";
 import { NextRequest, NextResponse } from "next/server";
-import { Prisma } from "../../../../../generated/prisma/client";
+// import { Prisma } from "../../../../../../generated/prisma/client";
 
-export async function POST(request: NextRequest) {
+interface Props {
+  params: Promise<{ id: string }>;
+}
+
+export async function PUT(request: NextRequest, { params }: Props) {
   try {
     const user = verifyToken(request);
     if (!user) return NextResponse.json({ message: "لا يُسمح إلا لمدير الموقع بإضافة مهام جديدة " }, { status: 403 });
     if (user.role === "EMPLOYEE") return NextResponse.json({ message: "لا يُسمح إلا لمدير الموقع بإضافة مهام جديدة " }, { status: 403 });
-    const body = (await request.json()) as Task;
-    const newTask = await prisma.task.create({
+    const id = (await params).id;
+    const body = (await request.json()) as ReassignReason;
+    const updatedTask = await prisma.task.update({
+      where: {id},
       data: {
-        title: body.title.trim(),
-        assignedBy: user.name,
-        currency: body.currency,
-        description: body.description.trim(),
+        assignedBy: user.role,
         startDate: body.startDate.trim(),
         endDate: body.endDate.trim(),
-        price: body.price,
-        priority: body.priority,
         status: "PENDING",
+        progress: 0,
         archived: false,
-        userId: body.userId,
+        userId: body.toEmployee,
         reassignReason: body.reassignReason,
-        attachments: body.attachments as Prisma.InputJsonValue[],
       },
         include: {assignedTo: true},
     });
-    return NextResponse.json(newTask, { status: 201 });
+    return NextResponse.json(updatedTask, { status: 200 });
   } catch (error) {
     return NextResponse.json({ message: error }, { status: 500 });
   }

@@ -10,6 +10,7 @@ import axios from "axios";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
+import TasksNotifications from "../tasks-notifications";
 
 interface Props {
   currentTab: TabsNavigationTypes;
@@ -31,7 +32,7 @@ const AllTasksSection = ({ currentTab, setShowNewTaskModal, setSelectedTask, set
     return tasks.filter((task) => !task.archived).filter((task) => {
       const matchesStatus =
         taskStatusFilter === "all" || task.status === taskStatusFilter;
-      const matchesUser = usersFilter === "all" || task.userId === taskStatusFilter;
+      const matchesUser = usersFilter === "all" || task.userId === usersFilter;
       return matchesStatus && matchesUser;
     });
   }, [taskStatusFilter, tasks, usersFilter]);
@@ -56,7 +57,9 @@ const AllTasksSection = ({ currentTab, setShowNewTaskModal, setSelectedTask, set
   }
   return (
     currentTab === "all-tasks" && (
-      <div
+      <>
+        <TasksNotifications tasks={tasks}/>
+        <div
         id="all-tasks"
         className={`section ${currentTab === "all-tasks" && "active"}`}
       >
@@ -188,8 +191,8 @@ const AllTasksSection = ({ currentTab, setShowNewTaskModal, setSelectedTask, set
                     </td>
                     <td>
                       <div
-                        className="badge badge-${task.assignedToType || 'employee'}"
-                        style={{ padding: "6px 12px" }}
+                        className={`badge badge-${task.assignedTo?.role?.toLowerCase() || 'employee'}`}
+                        style={{ padding: "6px 12px", textAlign: "center", minWidth: "140px" }}
                       >
                         {task.assignedTo?.name}
                       </div>
@@ -210,7 +213,7 @@ const AllTasksSection = ({ currentTab, setShowNewTaskModal, setSelectedTask, set
                       </span>
                     </td>
                     <td>
-                      <span className={`badge badge-${task.status.toLowerCase() || 'pending'}`}>
+                      <span className={`badge badge-${task.status.toLowerCase().replace("_", "-") || 'pending'}`} style={{textAlign: "center", minWidth: "120px"}}>
                         {t(
                           `status${(task.status.toLowerCase() || "pending")
                             .split("_")
@@ -262,6 +265,7 @@ const AllTasksSection = ({ currentTab, setShowNewTaskModal, setSelectedTask, set
           </table>
         </div>
       </div>
+      </>
     )
   );
 };

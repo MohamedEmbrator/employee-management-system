@@ -1,25 +1,43 @@
-const AdminTabsNavigation = () => {
+import { TabsNavigationTypes } from "@/utils/types";
+import { useTranslations } from "next-intl";
+
+interface Props {
+  currentTab: TabsNavigationTypes;
+  setCurrentTab: React.Dispatch<React.SetStateAction<TabsNavigationTypes>>;
+}
+
+const AdminTabsNavigation = ({ currentTab, setCurrentTab }: Props) => {
+  const t = useTranslations("adminPage");
+
   return (
     <div className="tabs">
-      {/* onclick="showTab('all-tasks')" */}
-      <button className="tab-btn active" data-tab="all-tasks">
+      <button
+        className={`tab-btn ${currentTab === "all-tasks" && "active"}`}
+        onClick={() => setCurrentTab("all-tasks")}
+      >
         <i className="fas fa-tasks"></i>
-        <span id="tabAllTasks">All Tasks</span>
+        <span id="tabAllTasks">{t("tabAllTasks")}</span>
       </button>
-      {/* onclick="showTab('submitted-work')" */}
-      <button className="tab-btn" data-tab="submitted-work">
+      <button
+        className={`tab-btn ${currentTab === "submitted-work" && "active"}`}
+        onClick={() => setCurrentTab("submitted-work")}
+      >
         <i className="fas fa-paper-plane"></i>
-        <span id="tabSubmittedWork">Submitted Work</span>
+        <span id="tabSubmittedWork">{t("tabSubmittedWork")}</span>
       </button>
-      {/* onclick="showTab('users')" */}
-      <button className="tab-btn" data-tab="users">
+      <button
+        className={`tab-btn ${currentTab === "users" && "active"}`}
+        onClick={() => setCurrentTab("users")}
+      >
         <i className="fas fa-users"></i>
-        <span id="tabUsers">All Users</span>
+        <span id="tabUsers">{t("tabUsers")}</span>
       </button>
-      {/* onclick="showTab('archive')" */}
-      <button className="tab-btn" data-tab="archive">
+      <button
+        className={`tab-btn ${currentTab === "archive" && "active"}`}
+        onClick={() => setCurrentTab("archive")}
+      >
         <i className="fas fa-archive"></i>
-        <span id="tabArchive">Archive</span>
+        <span id="tabArchive">{t("tabArchive")}</span>
       </button>
     </div>
   );

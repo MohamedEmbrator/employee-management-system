@@ -16,11 +16,11 @@ import ChangePasswordModal from "@/components/manager-dashboard/change-password-
 import NewManagerAccountModal from "@/components/manager-dashboard/new-manager-account-modal";
 import ReassignTaskModal from "@/components/manager-dashboard/reassign-task-modal";
 // import SubmissionDetailsModal from "@/components/manager-dashboard/submission-details-modal";
-// import TaskSubmissionDetailsModal from "@/components/manager-dashboard/task-submission-details-modal";
-import AddCommentsModal from "@/components/manager-dashboard/add-comments-modal";
+import TaskSubmissionDetailsModal from "@/components/manager-dashboard/task-submission-details-modal";
+// import AddCommentsModal from "@/components/manager-dashboard/add-comments-modal";
 import EditUserModal from "@/components/manager-dashboard/edit-user-modal";
 import { useState } from "react";
-import { TabsNavigationTypes, User } from "@/utils/types";
+import { SubmittedWork as SubmittedWorkType, TabsNavigationTypes, User } from "@/utils/types";
 import "./manager.css";
 
 const ManagerDashboardPage = () => {
@@ -35,6 +35,8 @@ const ManagerDashboardPage = () => {
   const [showReAssignTask, setShowReAssignTask] = useState(false);
   const [showEditUserData, setShowEditUserData] = useState(false);
   const [editUserDataForm, setEditUserDataForm] = useState<Partial<User>>({});
+  const [showSubmission, setShowSubmission] = useState(false);
+  const [selectedSubmission, setSelectedSubmission] = useState<Partial<SubmittedWorkType>>({});
   if (!loggedInUser) return router.replace("/");
   if (loggedInUser.role !== "MANAGER") return router.replace(`/dashboard/${loggedInUser.role.toLowerCase()}`);
   return (
@@ -45,19 +47,19 @@ const ManagerDashboardPage = () => {
         <ManagerDashboardHeader {...{setShowChangePasswordModal, setOpenNewManagerModal}} />
         <TabsNavigation {...{currentTab, setCurrentTab}} />
         <AllTasksSection {...{currentTab, setShowNewTaskModal, setSelectedTask, setShowViewTask, setShowReAssignTask}} />
-        <SubmittedWork {...{currentTab}}/>
+        <SubmittedWork {...{currentTab, setSelectedSubmission, setShowSubmission}}/>
         <UsersSection {...{currentTab, setShowEditUserData, setEditUserDataForm}}/>
-        <ArchiveSection {...{currentTab, setShowViewTask, setSelectedTask}}/>
+        <ArchiveSection {...{currentTab, setShowViewTask, setSelectedTask}} />
       </div>
       <TaskDetailsModal  {...{selectedTask, showViewTask, setShowViewTask}} />
       <NewTaskModal {...{showNewTaskModal, setShowNewTaskModal}} />
       <ChangePasswordModal {...{showChangePasswordModal, setShowChangePasswordModal}} />
       <NewManagerAccountModal {...{openNewManagerModal, setOpenNewManagerModal}} />
-      <ReassignTaskModal {...{showReAssignTask, setShowReAssignTask}} />
+      <ReassignTaskModal {...{showReAssignTask, setShowReAssignTask, selectedTask}} />
       {/* <SubmissionDetailsModal /> */}
       {/* <!-- Task Submission Details Modal (معدل) --> */}
-      {/* <TaskSubmissionDetailsModal /> */}
-      <AddCommentsModal />
+      <TaskSubmissionDetailsModal {...{selectedSubmission, setShowSubmission, showSubmission}} />
+      {/* <AddCommentsModal /> */}
       <EditUserModal {...{showEditUserData, setShowEditUserData, editUserDataForm, setEditUserDataForm}} />
       <LogoutButton />
     </>

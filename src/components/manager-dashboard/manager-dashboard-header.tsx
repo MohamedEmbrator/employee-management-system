@@ -28,7 +28,7 @@ const ManagerDashboardHeader = ({ setShowChangePasswordModal, setOpenNewManagerM
           {loggedInUser.name.slice(0, 1).toUpperCase()}
         </div>
         <div className="manager-details">
-          <h1 id="managerName">{t("managerName")}</h1>
+          <h1 id="managerName">{loggedInUser.name}</h1>
         </div>
       </div>
       <div className="header-actions">

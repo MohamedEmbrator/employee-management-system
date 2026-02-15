@@ -269,7 +269,12 @@
     "newManagerPasswordLabel": "Password",
     "confirmManagerPasswordLabel": "Confirm password",
     "cancelNewManagerBtn": "Cancel",
-    "createManagerBtn": "Create account"
+    "createManagerBtn": "Create account",
+    "statusUpdatePending": "Task marked as Pending",
+    "statusUpdateInProgress": "Task marked as In Progress",
+    "statusUpdateCompleted": "Task marked as Completed",
+    "statusUpdateUnderReview": "Task marked as Under Review",
+    "managerComments": "Manager Comments"
   },
   "adminPage": {
     "title": "Admin Panel | ProManage",

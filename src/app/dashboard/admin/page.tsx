@@ -1,15 +1,25 @@
 "use client";
 import LogoutButton from "@/components/logout-button";
-import { useAppSelector } from "@/redux/hooks";
+import { getUserProfile } from "@/redux/API/usersAPI";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 const AdminDashboard = () => {
   const t = useTranslations();
   const router = useRouter();
   const { loggedInUser } = useAppSelector((state) => state.auth);
+  const { user } = useAppSelector((state) => state.users);
+  const dispatch = useAppDispatch();
+  useEffect(() => {
+    if (loggedInUser) {
+      dispatch(getUserProfile(loggedInUser.id));
+    }
+  }, [dispatch, loggedInUser]);
   if (!loggedInUser) return router.replace("/");
+  if (loggedInUser.role !== "ADMIN") return router.replace(`/dashboard/${loggedInUser.role.toLowerCase()}`);
   return (
     <div id="adminDashboard" className="container">
       <div className="user-dashboard-container">
@@ -48,7 +58,7 @@ const AdminDashboard = () => {
             <div className="detail-item">
               <span className="detail-label">{t("accountCreated")}</span>
               <span className="detail-value" id="adminCreatedDate">
-                2024-01-01
+                {(new Date(user?.createdAt as string)).toLocaleDateString()}
               </span>
             </div>
             <div className="detail-item">

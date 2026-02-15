@@ -1310,3 +1310,11 @@ textarea:focus {
     align-items: stretch;
   }
 }
+
+@media (max-width: 1025px) {
+  .admin-info,
+  .stats-overview,
+  .header-actions{
+    flex: 0 !important;
+  }
+}

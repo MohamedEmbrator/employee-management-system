@@ -269,7 +269,12 @@
     "newManagerPasswordLabel": "كلمة المرور",
     "confirmManagerPasswordLabel": "تأكيد كلمة المرور",
     "cancelNewManagerBtn": "إلغاء",
-    "createManagerBtn": "إنشاء الحساب"
+    "createManagerBtn": "إنشاء الحساب",
+    "statusUpdatePending": "تم تحديد المهمة كقيد الانتظار",
+    "statusUpdateInProgress": "تم تحديد المهمة كقيد التنفيذ",
+    "statusUpdateCompleted": "تم تحديد المهمة كمكتملة",
+    "statusUpdateUnderReview": "تم تحديد المهمة كقيد المراجعة",
+    "managerComments": "ملاحظات المدير"
   },
   "adminPage": {
     "title": "لوحة المسؤول | برومانج",

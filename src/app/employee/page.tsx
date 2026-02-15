@@ -1,7 +1,7 @@
 "use client";
 import LanguageSwitcher from "@/components/language-switcher";
 import LogoutButton from "../manager-dashboard/logout-button";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
   fetchTasks,
@@ -9,16 +9,24 @@ import {
   updateTaskStatus,
 } from "@/redux/API/tasksAPI";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { formatPriceWithCurrency } from "@/utils/formatters";
-import { Task } from "@/utils/types";
+import { useLocale, useTranslations } from "next-intl";
+import { formatFileSize, formatPriceWithCurrency, getFileIcon } from "@/utils/formatters";
+import { Task, UploadedFile } from "@/utils/types";
 import "./employee.css";
+import { toast } from "react-toastify";
+import { handleRequestError } from "@/utils/handle-errors";
+import axios from "axios";
+import { DOMAIN } from "@/utils/constants";
+import { tasksActions } from "@/redux/slices/tasksSlice";
+import Loader from "@/components/ui/loader";
+import TasksNotifications from "@/components/tasks-notifications";
 
 const EmployeePage = () => {
   const { loggedInUser } = useAppSelector((state) => state.auth);
   const { tasks, tasksCount } = useAppSelector((state) => state.tasks);
   const dispatch = useAppDispatch();
   const t = useTranslations("employeePage");
+  const currentLanguage = useLocale() as "en" | "ar";
   const completedTasks = tasks.filter(
     (task) => task.status === "COMPLETED",
   ).length;
@@ -33,22 +41,89 @@ const EmployeePage = () => {
   }, [taskStatusFilter, tasks]);
   const [viewTaskDetails, setViewTaskDetails] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [comment, setComment] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [selectedAttachements, setSelectedAttachements] = useState<UploadedFile[]>([]);
+  const inputRef = useRef<null | HTMLInputElement>(null);
+
   useEffect(() => {
     dispatch(fetchTasks());
     dispatch(getTasksCount());
   }, [dispatch]);
+
+  
 
   const handleViewTask = (task: Task) => {
     setSelectedTask(task);
     setViewTaskDetails(true);
   };
 
+  function handleCloseView() {
+    setViewTaskDetails(false);
+    setSelectedTask(null);
+    setComment("");
+    setSelectedAttachements([]);
+  }
+  function handleNewTaskFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files) return;
+
+    if (selectedAttachements.length + files.length > 10) {
+      toast.error(t("maxFilesExceeded"));
+      return;
+    }
+
+    const newFiles: UploadedFile[] = [];
+
+    Array.from(files).forEach((file) => {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`${file.name} - ${t("fileTooLarge")}`);
+        return;
+      }
+
+      newFiles.push({
+        file,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+      });
+    });
+
+    setSelectedAttachements((prev) => [...prev, ...newFiles]);
+    e.target.value = "";
+  }
+
+  function removeFile(index: number) {
+    setSelectedAttachements((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  async function handleConfirmTask(taskId: string) {
+    const formData = new FormData();
+    formData.append("comment", comment as string);
+    formData.append("existingAttachments", JSON.stringify(selectedTask?.attachments));
+    selectedAttachements.forEach((attachment) => {
+      formData.append("attachments", attachment.file);
+    });
+    try {
+      setLoading(true);
+      const { data } = await axios.put(`${DOMAIN}/api/tasks/submit/${taskId}`, formData);
+      dispatch(tasksActions.updateTaskData(data));
+      setLoading(false);
+      setViewTaskDetails(false);
+      setComment("")
+      setSelectedAttachements([]);
+      toast.success(currentLanguage ? "Task Submittion Sent Successfully" : "تم إرسال تأكيد المهمة للمدير");
+    } catch (error) {
+      setLoading(false);
+      handleRequestError(error, currentLanguage === "en" ? "An error occured during send to manager" : "حدث خطأ أثناء إرسال بيانات المهمة للمدير")
+    }
+  }
   if (!loggedInUser) return router.replace("/");
-  if (loggedInUser.role !== "EMPLOYEE")
-    return router.replace(`/${loggedInUser?.role?.toLowerCase()}`);
+  if (loggedInUser.role !== "EMPLOYEE") return router.replace(`/${loggedInUser?.role?.toLowerCase()}`);
   return (
     <>
       {/* <!-- File Preview Modal --> */}
+      <TasksNotifications tasks={tasks}/>
       <div id="filePreviewModal" className="file-preview-modal">
         <div className="file-preview-content" id="filePreviewContent">
           <div className="preview-header">
@@ -190,11 +265,11 @@ const EmployeePage = () => {
                       </td>
                       <td>
                         <span
-                          className={`badge badge-${task.status?.toLowerCase()}`}
+                          className={`badge badge-${task.status?.toLowerCase().replace("_", "-")}`}
                         >
                           {t(
                             `status${(task.status.toLowerCase() || "pending")
-                              .split("-")
+                              .split("_")
                               .map(
                                 (word) =>
                                   word.charAt(0).toUpperCase() + word.slice(1),
@@ -240,7 +315,7 @@ const EmployeePage = () => {
               <h2 id="modalTaskTitle">{selectedTask?.title}</h2>
               <button
                 className="close-modal"
-                onClick={() => setViewTaskDetails(false)}
+                onClick={handleCloseView}
               >
                 &times;
               </button>
@@ -317,18 +392,35 @@ const EmployeePage = () => {
               <h3 id="attachmentsTitle" dir="auto">
                 {t("attachmentsTitle")}
               </h3>
-              <div className="attachments-grid" id="modalAttachments">
-                {/* <!-- Attachments will be populated by JavaScript --> */}
+              <div className="attachments-grid" id="modalAttachments" >
+                {selectedTask.attachments.length < 1 && (
+                  <p style={{color: "#666", textAlign: "center"}}>{t("attachmentsTitle")}: لا توجد مرفقات</p>
+                )}
+                {selectedTask.attachments.length > 0 && selectedTask.attachments.map((attachment, index) => (
+                  <a
+                    key={index}
+                    className="attachment-container"
+                    href={typeof attachment === "string" ? attachment : "url" in attachment ? attachment.url : ""}
+                    download={typeof attachment === "string" ? attachment : "url" in attachment ? attachment.url : ""}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <div className="attachment-icon">
+                        <i className={`fas fa-${getFileIcon(typeof attachment === "string" ? attachment : "url" in attachment ? attachment.url.split(".")[attachment.url.split(".").length - 1] : "")}`}></i>
+                    </div>
+                    <div className="attachment-name">{typeof attachment === "string" ? attachment : "url" in attachment ? attachment.url.split("/")[attachment.url.split("/").length - 1] : ""}</div>
+                  </a>
+                ))}
               </div>
 
               {/* <!-- Manager Comments --> */}
               <div id="managerCommentsSection" className="manager-comments">
-                {selectedTask.comment ? (
+                {selectedTask.reassignReason ? (
                   <>
                     <h4>
                       <i className="fas fa-comment"></i> {t("managerComments")}
                     </h4>
-                    <p>{selectedTask.comment}</p>
+                    <p>{selectedTask.reassignReason}</p>
                     {/* <div className="comment-date">
                       {t("commentedOn")}:
                       {new Date(latestComment.date).toLocaleString()}
@@ -380,7 +472,7 @@ const EmployeePage = () => {
               <div className="work-submission">
                 <h3 id="submissionTitle">{t("submissionTitle")}</h3>
                 {/* onclick="document.getElementById('fileUpload').click()" */}
-                <div className="file-upload">
+                <div className="file-upload" onClick={() => inputRef.current!.click()}>
                   <i className="fas fa-cloud-upload-alt"></i>
                   <p id="uploadText">{t("uploadText")}</p>
                   <p
@@ -395,12 +487,42 @@ const EmployeePage = () => {
                     id="fileUpload"
                     multiple
                     style={{ display: "none" }}
+                    ref={inputRef}
+                    onChange={handleNewTaskFileUpload}
                   />
                 </div>
+                  <div className="file-uploaded-list" id="newTaskUploadedFiles">
+                    {selectedAttachements.length > 0 &&
+                      selectedAttachements.map((file, index) => (
+                        <div key={index} className="file-uploaded-item">
+                          <div className="file-uploaded-info">
+                            <div className="file-uploaded-icon">
+                              <i
+                                className={`fas fa-${getFileIcon(file.name)}`}
+                              ></i>
+                            </div>
 
-                <div className="uploaded-files" id="uploadedFiles">
-                  {/* <!-- Uploaded files will appear here --> */}
-                </div>
+                            <div>
+                              <div className="file-uploaded-name">
+                                {file.name}
+                              </div>
+                              <div className="file-uploaded-size">
+                                {formatFileSize(file.size)}
+                              </div>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            className="file-remove-btn"
+                            onClick={() => removeFile(index)}
+                          >
+                            <i className="fas fa-times"></i>
+                          </button>
+                        </div>
+                      ))}
+                  </div>
+
 
                 <div>
                   <label
@@ -416,6 +538,8 @@ const EmployeePage = () => {
                   <textarea
                     id="workComments"
                     placeholder="أضف أي ملاحظات حول عملك..."
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
                   ></textarea>
                 </div>
               </div>
@@ -425,13 +549,13 @@ const EmployeePage = () => {
                 type="button"
                 className="btn-secondary"
                 id="cancelBtn"
-                onClick={() => setViewTaskDetails(false)}
+                disabled={loading}
+                onClick={handleCloseView}
               >
                 {t("cancelBtn")}
               </button>
-              {/* onclick="sendWorkToManager()" */}
-              <button type="button" className="btn-primary" id="sendBtn">
-                {t("sendBtn")}
+              <button type="button" className="btn-primary" id="sendBtn" disabled={loading} onClick={() => handleConfirmTask(selectedTask.id)}>
+                {loading ? <Loader text={currentLanguage === "en" ? "Sending" : "جاري الإرسال"} /> : t("sendBtn")}
               </button>
             </div>
           </div>

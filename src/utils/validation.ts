@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { EditUserData, RegisterUser, Task } from "./types";
+import { EditUserData, ReassignReason, RegisterUser, Task } from "./types";
 
 export function validateRegister(data: RegisterUser) {
   const schema = Joi.object({
@@ -57,6 +57,15 @@ export function validateEditTask(data: Partial<Task>) {
     priority: Joi.string().trim(),
     price: Joi.number(),
     currency: Joi.string(),
+  });
+  return schema.validate(data);
+}
+
+export function validateReassignReason(data: Partial<ReassignReason>) {
+  const schema = Joi.object({
+    startDate: Joi.string().trim().required(),
+    endDate: Joi.string().trim().required(),
+    reassignReason: Joi.string().trim(),
   });
   return schema.validate(data);
 }

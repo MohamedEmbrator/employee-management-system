@@ -5,6 +5,7 @@ import axios from "axios";
 import { tasksActions } from "../slices/tasksSlice";
 import { toast } from "react-toastify";
 import { TaskStatus } from "@/utils/types";
+import { submittedWorksActions } from "../slices/submittedWorkSlice";
 
 export function fetchTasks() {
   return async (dispatch: Dispatch) => {
@@ -56,7 +57,20 @@ export function updateTaskStatus(taskId: string, newStatus: TaskStatus, message:
   return async (dispatch: Dispatch) => {
     try {
       const { data } = await axios.put(`${DOMAIN}/api/tasks/status/${taskId}`, { status: newStatus });
-      dispatch(tasksActions.updateTaskData(data));
+      dispatch(tasksActions.updateTaskData(data.updatedTask));
+      toast.success(message);
+    } catch (error) {
+      handleRequestError(error, "حدث خطأ أثناء تحديث حالة المهمة");
+    }
+  }
+}
+
+export function updateTaskStatusAndSubmission(taskId: string, newStatus: TaskStatus, message: string) {
+  return async (dispatch: Dispatch) => {
+    try {
+      const { data } = await axios.put(`${DOMAIN}/api/tasks/status/${taskId}`, { status: newStatus });
+      dispatch(tasksActions.updateTaskData(data.updatedTask));
+      dispatch(submittedWorksActions.updateSubmittedWorkData(data.updatedSubmission));
       toast.success(message);
     } catch (error) {
       handleRequestError(error, "حدث خطأ أثناء تحديث حالة المهمة");

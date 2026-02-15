@@ -4,7 +4,7 @@ export type Currency = "USD" | "EUR" | "EGP" | "AED" | "SAR" | "GBP";
 export type UserRole = "MANAGER" | "ADMIN" | "EMPLOYEE";
 export type TaskStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "UNDER_REVIEW";
 export type TabsNavigationTypes = "all-tasks" | "submitted-work" | "users" | "archive";
-
+export type TimeFilter = "today" | "week" | "month" | "all";
 export interface RegisterUser {
   name: string;
   email: string;
@@ -58,11 +58,14 @@ export interface Task {
   progress: number;
   reassignReason?: string;
   comment: string;
+  submittedWorks: SubmittedWork[];
 }
 
-export interface SubmittedWork extends Omit<Task, "assignedBy" | "assignedTo"> {
+export interface SubmittedWork extends Omit<Task, "assignedTo"> {
   fromEmployee: string;
   toEmployee: User;
+  task: Task;
+  taskId: string;
 }
 
 export type JWTPayload = {
@@ -80,4 +83,12 @@ export interface UploadedFile {
   name: string;
   size: number;
   type: string;
+}
+
+export interface ReassignReason {
+  fromEmployee: string;
+  toEmployee: string;
+  startDate: string;
+  endDate: string;
+  reassignReason: string;
 }

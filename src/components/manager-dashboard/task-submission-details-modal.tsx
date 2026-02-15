@@ -1,106 +1,134 @@
+"use client";
+import { SubmittedWork } from "@/utils/types";
 import { useTranslations } from "next-intl";
 
-const TaskSubmissionDetailsModal = () => {
+interface Props {
+  selectedSubmission: Partial<SubmittedWork>;
+  showSubmission: boolean;
+  setShowSubmission: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const TaskSubmissionDetailsModal = ({selectedSubmission, setShowSubmission, showSubmission}: Props) => {
   const t = useTranslations("managerDashboardPage");
-  return (
-    <div id="taskSubmissionModal" className="modal">
-      <div className="modal-content">
-        <div className="modal-header">
-          <h2 id="modalTaskSubmissionTitle">{t("modalTaskSubmissionTitle")}</h2>
-          {/* onclick="closeTaskSubmissionModal()" */}
-          <button className="close-modal">&times;</button>
-        </div>
-        <div className="modal-body">
-          <div className="details-grid">
-            <div className="detail-item">
-              <strong id="submissionDetailManager">{t("submissionDetailManager")}</strong>
-              <span id="modalSubmissionTaskManager">--</span>
-            </div>
-            <div className="detail-item">
-              <strong id="submissionDetailEmployee">{t("submissionDetailEmployee")}</strong>
-              <span id="modalSubmissionTaskEmployee">--</span>
-            </div>
-            <div className="detail-item">
-              <strong id="submissionDetailStartDate">{t("submissionDetailStartDate")}</strong>
-              <span id="modalSubmissionTaskStartDate">--</span>
-            </div>
-            <div className="detail-item">
-              <strong id="submissionDetailEndDate">{t("submissionDetailEndDate")}</strong>
-              <span id="modalSubmissionTaskEndDate">--</span>
-            </div>
-            <div className="detail-item">
-              <strong id="submissionDetailPriority">{t("submissionDetailPriority")}</strong>
-              <span id="modalSubmissionTaskPriority">--</span>
-            </div>
-            <div className="detail-item">
-              <strong id="submissionDetailStatus">{t("submissionDetailStatus")}</strong>
-              <span id="modalSubmissionTaskStatus">--</span>
-            </div>
-            <div className="detail-item">
-              <strong id="submissionDetailProgress">{t("submissionDetailProgress")}</strong>
-              <span id="modalSubmissionTaskProgress">0%</span>
-            </div>
-            <div className="detail-item">
-              <strong id="submissionDetailPrice">{t("submissionDetailPrice")}</strong>
-              <span id="modalSubmissionTaskPrice">--</span>
-            </div>
-          </div>
 
-          <h3 id="submissionDescriptionTitle">{t("submissionDescriptionTitle")}</h3>
-          <p id="modalSubmissionTaskDescription"></p>
-
-          {/* <!-- ✅ قسم العمل المُسلم من الموظف --> */}
-          <div
-            className="employee-work-section"
-            id="submissionEmployeeWorkSection"
-          >
-            <h4>
-              <i className="fas fa-user-check"></i>{" "}
-              <span id="submissionEmployeeSubmittedWorkTitle">
-                {t("submissionEmployeeSubmittedWorkTitle")}
-              </span>
-            </h4>
-            <div id="submissionEmployeeWorkContent">
-              {/* <!-- Employee work will be populated by JavaScript --> */}
-            </div>
-            {/* onclick="openAllEmployeeFilesSubmission()" */}
-            <button className="auto-open-btn">
-              <i className="fas fa-external-link-alt"></i>{" "}
-              <span id="openAllEmployeeFilesSubmissionBtn">
-                {t("openAllEmployeeFilesSubmissionBtn")}
-              </span>
+  return (showSubmission && selectedSubmission) && (
+      <div id="taskModal" className={`modal ${showSubmission && "show"}`}>
+        <div className="modal-content">
+          <div className="modal-header">
+          <h2 id="modalTaskTitle">{selectedSubmission.title}</h2>
+            <button
+              className="close-modal"
+              onClick={() => setShowSubmission(false)}
+            >
+              &times;
             </button>
           </div>
+          <div className="modal-body">
+            <div className="details-grid">
+              <div className="detail-item">
+                <strong id="detailManager">{t("detailManager")}:</strong>
+                <span id="modalTaskManager" style={{ display: "block" }}>
+                  {selectedSubmission.fromEmployee}
+                </span>
+              </div>
+              <div className="detail-item">
+                <strong id="detailEmployee">{t("detailEmployee")}</strong>
+                <span id="modalTaskEmployee">{selectedSubmission?.toEmployee?.name}</span>
+              </div>
+              <div className="detail-item">
+                <strong id="detailStartDate">{t("detailStartDate")}</strong>
+                <span id="modalTaskStartDate">{selectedSubmission.startDate}</span>
+              </div>
+              <div className="detail-item">
+                <strong id="detailEndDate">{t("detailEndDate")}</strong>
+                <span id="modalTaskEndDate">{selectedSubmission.endDate}</span>
+              </div>
+              <div className="detail-item">
+                <strong id="detailPriority">{t("detailPriority")}</strong>
+                <span id="modalTaskPriority">
+                  {selectedSubmission.priority?.toLowerCase()}
+                </span>
+              </div>
+              <div className="detail-item">
+                <strong id="detailStatus">{t("detailStatus")}</strong>
+                <span id="modalTaskStatus">{selectedSubmission.status?.toLowerCase().replace("_", "-")}</span>
+              </div>
+              <div className="detail-item">
+                <strong id="detailProgress">{t("detailProgress")}</strong>
+                <span id="modalTaskProgress">{selectedSubmission.progress}%</span>
+              </div>
+              <div className="detail-item">
+                <strong id="detailPrice">{t("detailPrice")}</strong>
+                <span id="modalTaskPrice">
+                  {selectedSubmission.price} {selectedSubmission.currency}
+                </span>
+              </div>
+            </div>
 
-          {/* <!-- Auto Open Button for Files --> */}
-          {/* onclick="autoOpenAllFilesSubmission()" */}
-          <button className="auto-open-btn">
-            <i className="fas fa-external-link-alt"></i>
-            <span id="autoOpenSubmissionTaskBtn">{t("autoOpenSubmissionTaskBtn")}</span>
-          </button>
+            <h3 id="descriptionTitle">{t("descriptionTitle")}</h3>
+            <p id="modalTaskDescription">{selectedSubmission.description}</p>
 
-          {/* <!-- Status Update Buttons --> */}
-          <div
-            className="status-update-buttons"
-            id="submissionStatusUpdateButtons"
-          >
-            {/* <!-- Status buttons will be populated by JavaScript --> */}
+            {/* <!-- ✅ قسم العمل المُسلم من الموظف --> */}
+            <div className="employee-work-section" id="employeeWorkSection">
+              <h4>
+                <i className="fas fa-user-check"></i>{" "}
+                <span id="employeeSubmittedWorkTitle">
+                  {t("employeeSubmittedWorkTitle")}
+                </span>
+              </h4>
+              <div id="employeeWorkContent">{selectedSubmission.comment}</div>
+              <div className="attachments-grid">
+                {selectedSubmission.attachments &&
+                  selectedSubmission.attachments.map((attachment, index) => (
+                    <a
+                      key={index}
+                      className="auto-open-btn"
+                      href={
+                        typeof attachment === "string"
+                          ? attachment
+                          : "url" in attachment
+                            ? attachment.url
+                            : ""
+                      }
+                      download={
+                        typeof attachment === "string"
+                          ? attachment
+                          : "url" in attachment
+                            ? attachment.url
+                            : ""
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <i className="fas fa-external-link-alt"></i>{" "}
+                      <span id="openAllEmployeeFilesBtn">
+                        {typeof attachment === "string"
+                          ? attachment
+                          : "url" in attachment
+                            ? attachment.url.split("/")[
+                                attachment.url.split("/").length - 1
+                              ]
+                            : ""}
+                      </span>
+                    </a>
+                  ))}
+              </div>
+            </div>
+          </div>
+          <div className="modal-footer">
+            <button
+              type="button"
+              className="btn-secondary"
+              id="cancelBtn"
+              onClick={() => setShowSubmission(false)}
+            >
+              <i className="fas fa-times"></i>
+              <span>{t("cancelBtn")}</span>
+            </button>
+            {/* <!-- تم إزالة زر Reassign Task هنا --> */}
           </div>
         </div>
-        <div className="modal-footer">
-          {/* onclick="closeTaskSubmissionModal()" */}
-          <button
-            type="button"
-            className="btn-secondary"
-            id="cancelSubmissionBtn"
-          >
-            <i className="fas fa-times"></i>
-            <span>{t("cancelSubmissionBtn")}</span>
-          </button>
-          {/* <!-- تم إزالة زر Reassign Task هنا --> */}
-        </div>
       </div>
-    </div>
   );
 };
 

@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const user = verifyToken(request);
     let tasks = await prisma.task.findMany({ orderBy: { createdAt: "desc" }, include: { assignedTo: true } });
     if (user?.role === "EMPLOYEE") {
-      tasks = await prisma.task.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, include: { assignedTo: true } });
+      tasks = await prisma.task.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, include: { assignedTo: true, submittedWorks: true } });
     }
     return NextResponse.json(tasks, { status: 200 });
   } catch (error) {
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
         attachments: attachmentsUrls,
         progress: 0,
       },
-      include: {assignedTo: true}
+      include: {assignedTo: true, submittedWorks: true}
     });
       return NextResponse.json(newTask, { status: 201 });
     } catch (error) {

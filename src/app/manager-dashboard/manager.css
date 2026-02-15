@@ -126,6 +126,26 @@ body {
   min-width: 200px;
 }
 
+@media (min-width: 768px) and (max-width: 1025px) {
+  .manager-info,
+  .stats-overview,
+  .header-actions{
+    flex: 0 !important;
+  }
+  .header-actions {
+    flex-direction: column !important;
+  }
+}
+
+@media (max-width: 1025px) {
+  .manager-info,
+  .stats-overview,
+  .header-actions{
+    flex: 0 !important;
+  }
+}
+
+
 .header-btn {
   padding: 12px 20px;
   border: none;
@@ -1592,4 +1612,11 @@ textarea:focus {
   .header-actions {
     width: 100%;
   }
+}
+
+.attachments-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
 }
